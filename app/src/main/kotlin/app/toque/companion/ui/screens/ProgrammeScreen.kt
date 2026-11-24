@@ -22,9 +22,42 @@ import app.toque.companion.ui.iconLine
 import app.toque.companion.ui.pauseButton
 import app.toque.companion.ui.stopButton
 import app.toque.core.i18n.tr
+import app.toque.core.i18n.trKey
 
 /** Les programmes du robot, avec l'icône de l'écran Programmes du robot. */
-enum class ProgramKind(val icon: Icon.Kind) { KNEAD(Icon.Kind.KNEAD), STEAM(Icon.Kind.STEAM), TOAST(Icon.Kind.FLAME), CLEAN(Icon.Kind.DROP) }
+/**
+ * Les programmes des robots, avec l'icône et le nom (en français, traduit par tr) de l'écran Programmes
+ * du robot : les quatre du Connect, puis ceux du Smart ([smart]).
+ */
+enum class ProgramKind(val icon: Icon.Kind, val fr: String, val smart: Boolean = false) {
+    KNEAD(Icon.Kind.KNEAD, trKey("Pétrir")),
+    STEAM(Icon.Kind.STEAM, trKey("Vapeur")),
+    TOAST(Icon.Kind.FLAME, trKey("Rissoler")),
+    CLEAN(Icon.Kind.DROP, trKey("Nettoyage")),
+    MIXER(Icon.Kind.SPEED, trKey("Mixer"), true),
+    SMOOTHIE(Icon.Kind.DROP, trKey("Smoothie"), true),
+    EGGS(Icon.Kind.TIMER, trKey("Cuire des œufs"), true),
+    SOUS_VIDE(Icon.Kind.THERMO, trKey("Sous-vide"), true),
+    SLOW_COOK(Icon.Kind.POT, trKey("Mijoter"), true),
+    FERMENT(Icon.Kind.TIMER, trKey("Fermenter"), true),
+    RICE(Icon.Kind.POT, trKey("Cuire du riz"), true),
+    KETTLE(Icon.Kind.THERMO, trKey("Chauffer l'eau"), true),
+    PREWASH(Icon.Kind.DROP, trKey("Prélaver"), true),
+    LONG_CLEAN(Icon.Kind.DROP, trKey("Nettoyage long"), true);
+
+    val label: String get() = tr(fr)
+
+    companion object {
+        /** Le programme dont [title] est le nom, écrit dans la langue du robot (comparé dans chaque langue connue). */
+        fun named(title: String): ProgramKind? {
+            val t = title.trim()
+            if (t.isEmpty()) return null
+            return values().firstOrNull { k ->
+                t.equals(k.fr, ignoreCase = true) || app.toque.core.i18n.I18n.languages.any { it.texts[k.fr]?.equals(t, ignoreCase = true) == true }
+            }
+        }
+    }
+}
 
 /** Programme lancé sur le robot (maquette « Programme »). */
 data class ProgrammeState(

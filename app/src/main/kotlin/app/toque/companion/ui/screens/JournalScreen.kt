@@ -28,6 +28,8 @@ enum class JournalKind(val icon: Icon.Kind, internal val feminine: Boolean) {
     STEAM(Icon.Kind.STEAM, false),
     TOAST(Icon.Kind.FLAME, false),
     CLEAN(Icon.Kind.DROP, false),
+    /** Un programme du Smart (Mixer, Sous-vide…) : son icône vient de [program]. */
+    PROGRAM(Icon.Kind.TIMER, false),
 }
 
 /** Fin d'une activité : texte accordé par l'écran (« Terminée » pour une recette, « Terminé » pour un programme). */
@@ -185,7 +187,7 @@ class JournalScreen(c: Context, private val actions: JournalActions, private val
                 root.background = if (tappable) Ui.pressable(Ui.round(Ui.SURFACE, 20f), 20f) else Ui.round(Ui.SURFACE, 20f)
                 Ui.show(chevron, tappable)
             }
-            badge.icon.set(e.kind.icon)
+            badge.icon.set(if (e.kind == JournalKind.PROGRAM) ProgramKind.named(e.title)?.icon ?: e.kind.icon else e.kind.icon)
             Ui.set(title, e.title)
             Ui.set(detail, e.detail)
             val (text, color) = when (e.outcome) {

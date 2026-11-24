@@ -797,5 +797,9 @@
   "Rien à acheter pour l'instant.": "Nothing to buy for now.",
   "Aucun ingrédient à ajouter.": "No ingredients to add.",
   "1 ingrédient ajouté à la liste de courses.": "1 ingredient added to the shopping list.",
-  "%d ingrédients ajoutés à la liste de courses.": "%d ingredients added to the shopping list."
+  "%d ingrédients ajoutés à la liste de courses.": "%d ingredients added to the shopping list.",
+  "%s · de %d à %d °C": "%s · %d to %d °C",
+  "%s · vitesse %d": "%s · speed %d",
+  "%s · %d °C": "%s · %d °C",
+  "%s au plus · %d °C": "up to %s · %d °C"
 }

@@ -140,6 +140,17 @@ class ManualTunerTest {
         assertNull(t.override)
     }
 
+    /** Smart : une cuisson lancée sur son écran à 40 °C (hors de la table de Toque) se règle d'ici à partir de 40 °C. */
+    @Test fun smartFortyDegreesStepsFromForty() {
+        val smart = job(speed = 1, tempC = 40, totalMs = 1_200_000, remainingMs = 760_000).copy(tempLevel = 1)
+        tuner.onState(state(job = smart, revision = ++revision).copy(limits = app.toque.companion.WireFixtures.limits.copy(heatNoStir = false)))
+        // 37 °C, pas « sans chauffe » : le cran d'en dessous de 40 °C.
+        tuner.step(CARD_TEMP, -1)
+        assertEquals(37, tuner.override!!.tempC)
+        tuner.step(CARD_TEMP, 1)
+        assertEquals(45, tuner.override!!.tempC)
+    }
+
     @Test fun anotherJobDropsTheInput() {
         tuner.onState(robot(base))
         tuner.step(CARD_SPEED, 1)

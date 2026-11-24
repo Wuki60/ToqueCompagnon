@@ -400,6 +400,24 @@ class LivePresenterTest {
         assertNull(v.etapes)
     }
 
+    /** Smart : un programme de l'appli d'origine (Smoothie) est reconnu, et la liste montre les programmes du Smart. */
+    @Test fun smartProgramIsProgramme() {
+        val j = job(kind = "PROGRAM", label = "Smoothie", kindLabel = "Programme", remainingMs = 40_000, totalMs = 60_000, speed = 10, tempC = 0)
+        val s = state(job = j).copy(robot = state().robot.copy(name = "Monsieur Cuisine Smart"),
+            limits = app.toque.companion.WireFixtures.limits.copy(heatNoStir = false))
+        val v = present(input(s))
+        assertEquals(Route.PROGRAMME, v.route)
+        val p = v.screen as ProgrammeState
+        assertEquals("Smoothie", p.name)
+        assertEquals(listOf(ProgramKind.SMOOTHIE), p.programs.filter { it.running }.map { it.kind })
+        assertEquals(ProgramKind.values().toList(), p.programs.map { it.kind })
+        assertEquals("1 min · vitesse 10", p.programs.first { it.kind == ProgramKind.SMOOTHIE }.detail)
+        assertEquals("6 h 00 · de 40 à 85 °C", p.programs.first { it.kind == ProgramKind.SOUS_VIDE }.detail)
+        // Le Connect garde ses quatre programmes.
+        val c = present(input(state(job = job(kind = "STEAM", label = "Vapeur", kindLabel = "Vapeur", totalMs = 1_200_000))))
+        assertEquals(4, (c.screen as ProgrammeState).programs.size)
+    }
+
     @Test fun programIsProgramme() {
         val j = job(kind = "STEAM", label = "Vapeur", kindLabel = "Vapeur", remainingMs = 845_000, totalMs = 1_200_000, speed = 0, tempC = 120)
         val v = present(input(state(job = j, machine = ready.copy(tempC = 100))))

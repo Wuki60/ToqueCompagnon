@@ -797,5 +797,9 @@
   "Rien à acheter pour l'instant.": "Im Moment nichts zu kaufen.",
   "Aucun ingrédient à ajouter.": "Keine Zutaten zum Hinzufügen.",
   "1 ingrédient ajouté à la liste de courses.": "1 Zutat zur Einkaufsliste hinzugefügt.",
-  "%d ingrédients ajoutés à la liste de courses.": "%d Zutaten zur Einkaufsliste hinzugefügt."
+  "%d ingrédients ajoutés à la liste de courses.": "%d Zutaten zur Einkaufsliste hinzugefügt.",
+  "%s · de %d à %d °C": "%s · %d bis %d °C",
+  "%s · vitesse %d": "%s · Stufe %d",
+  "%s · %d °C": "%s · %d °C",
+  "%s au plus · %d °C": "bis zu %s · %d °C"
 }

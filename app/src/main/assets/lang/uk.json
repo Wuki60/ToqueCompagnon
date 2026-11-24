@@ -797,5 +797,9 @@
   "Ingrédient trop long : %d caractères au plus": "Інгредієнт задовгий: не більше %d символів",
   "Trop d'ingrédients : %d au plus": "Забагато інгредієнтів: не більше %d",
   "Trop d'étapes : %d au plus": "Забагато кроків: не більше %d",
-  "Étape %d : %d caractères au plus": "Крок %d: не більше %d символів"
+  "Étape %d : %d caractères au plus": "Крок %d: не більше %d символів",
+  "%s · de %d à %d °C": "%s · від %d до %d °C",
+  "%s · vitesse %d": "%s · швидкість %d",
+  "%s · %d °C": "%s · %d °C",
+  "%s au plus · %d °C": "до %s · %d °C"
 }

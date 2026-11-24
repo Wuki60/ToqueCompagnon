@@ -215,7 +215,8 @@ class JournalFlow(
         fun kindOf(a: ActivityWire): JournalKind = when (a.kind) {
             "recipe" -> JournalKind.RECIPE
             "manual" -> PROGRAMS.firstOrNull { (fr, _) -> named(a.title, fr) }?.second ?: JournalKind.MANUAL
-            else -> PROGRAMS.firstOrNull { (fr, _) -> named(a.title, fr) }?.second ?: JournalKind.KNEAD
+            else -> PROGRAMS.firstOrNull { (fr, _) -> named(a.title, fr) }?.second
+                ?: if (app.toque.companion.ui.screens.ProgramKind.named(a.title)?.smart == true) JournalKind.PROGRAM else JournalKind.KNEAD
         }
 
         private fun named(title: String, fr: String): Boolean =

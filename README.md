@@ -75,7 +75,8 @@ The phone does not replace the robot, it complements it.
 ## Requirements
 
 - An **Android 8** or newer phone or tablet.
-- A Monsieur Cuisine **Connect** robot running an up-to-date [Toque](https://github.com/Wuki60/MrCuisineVibeConnect).
+- A Monsieur Cuisine **Connect** or **Smart** (in testing) robot running an up-to-date [Toque](https://github.com/Wuki60/MrCuisineVibeConnect).
+  On the Smart, the app also shows its programs (Mixer, Sous-vide, Slow cook…).
 - The phone and the robot on the **same Wi-Fi network**.
 
 ## Languages

@@ -23,6 +23,7 @@ import app.toque.companion.ui.screens.PauseState
 import app.toque.companion.ui.screens.PeseeState
 import app.toque.companion.ui.screens.ProgramItem
 import app.toque.companion.ui.screens.ProgramKind
+import app.toque.core.protocol.SmartProgram
 import app.toque.companion.ui.screens.ProgrammeState
 import app.toque.companion.ui.screens.ReposState
 import app.toque.companion.ui.screens.RepriseState
@@ -479,8 +480,15 @@ object LivePresenter {
         "STEAM" -> ProgramKind.STEAM
         "TOAST" -> ProgramKind.TOAST
         "MANUAL" -> ProgramKind.CLEAN
-        else -> null
+        // Smart : un programme de l'appli d'origine (Mixer, Sous-vide…), reconnu à son nom.
+        else -> ProgramKind.named(job.label) ?: ProgramKind.named(job.kindLabel)
     }
+
+    /**
+     * Le robot est un Monsieur Cuisine Smart : il ne chauffe pas lame à l'arrêt (limits.heatNoStir), ou il
+     * le dit dans son nom. Un robot plus ancien, qui n'envoie pas heatNoStir, est un Connect.
+     */
+    fun isSmart(s: StateWire): Boolean = !s.limits.heatNoStir || s.robot.name.contains("Smart", ignoreCase = true)
 
     private fun programme(ctx: Ctx, job: JobWire): ProgrammeState {
         val s = ctx.s
@@ -497,14 +505,37 @@ object LivePresenter {
             remainingMs = ctx.remaining(job),
             totalMs = job.totalMs,
             tags = tags,
-            programs = robotPrograms(kind),
+            programs = robotPrograms(kind, isSmart(s)),
             canPause = ctx.can(Pending.PAUSE, s.can.pause.allowed),
             canStop = ctx.can(Pending.STOP, s.can.stop.allowed),
         )
     }
 
-    /** Les programmes du robot, décrits d'après leurs définitions (core, Programs). */
-    fun robotPrograms(running: ProgramKind?): List<ProgramItem> {
+    /**
+     * Les programmes du robot, décrits d'après leurs définitions (core, Programs et SmartProgram) : ceux du
+     * Connect, et sur le Smart ceux de l'appli d'origine en plus, comme sur son écran Programmes.
+     */
+    fun robotPrograms(running: ProgramKind?, smart: Boolean = false): List<ProgramItem> {
+        val base = connectPrograms(running)
+        if (!smart) return base
+        fun sec(p: SmartProgram) = Fmt.duration(p.defaultS)
+        fun range(p: SmartProgram) = tr("%s · de %d à %d °C", sec(p), p.minCelsius, p.maxCelsius)
+        fun item(k: ProgramKind, detail: String) = ProgramItem(k, k.label, detail, running == k)
+        return base + listOf(
+            item(ProgramKind.MIXER, tr("%s · vitesse %d", sec(SmartProgram.MIXER), SmartProgram.MIXER.speed)),
+            item(ProgramKind.SMOOTHIE, tr("%s · vitesse %d", sec(SmartProgram.SMOOTHIE), SmartProgram.SMOOTHIE.speed)),
+            item(ProgramKind.EGGS, tr("%s · %d °C", sec(SmartProgram.EGGS), SmartProgram.EGGS.targetCelsius)),
+            item(ProgramKind.SOUS_VIDE, range(SmartProgram.SOUS_VIDE)),
+            item(ProgramKind.SLOW_COOK, range(SmartProgram.MIJOTER_BRASSE)),
+            item(ProgramKind.FERMENT, range(SmartProgram.FERMENTER_BRASSE)),
+            item(ProgramKind.RICE, tr("%s · %d °C", sec(SmartProgram.RICE), SmartProgram.RICE.targetCelsius)),
+            item(ProgramKind.KETTLE, tr("%s · %d °C", sec(SmartProgram.KETTLE), SmartProgram.KETTLE.targetCelsius)),
+            item(ProgramKind.PREWASH, tr("%s · %d °C", sec(SmartProgram.PRELAVAGE_V10), SmartProgram.PRELAVAGE_V10.targetCelsius)),
+            item(ProgramKind.LONG_CLEAN, tr("%s au plus · %d °C", Fmt.duration(app.toque.core.protocol.NETTOYAGE_MAX_S), 40)),
+        )
+    }
+
+    private fun connectPrograms(running: ProgramKind?): List<ProgramItem> {
         val knead = Programs.knead()
         val steam = Programs.steam()
         val toast = Programs.toast()

@@ -797,5 +797,9 @@
   "Rien à acheter pour l'instant.": "Res per comprar de moment.",
   "Aucun ingrédient à ajouter.": "Cap ingredient per afegir.",
   "1 ingrédient ajouté à la liste de courses.": "1 ingredient afegit a la llista de la compra.",
-  "%d ingrédients ajoutés à la liste de courses.": "%d ingredients afegits a la llista de la compra."
+  "%d ingrédients ajoutés à la liste de courses.": "%d ingredients afegits a la llista de la compra.",
+  "%s · de %d à %d °C": "%s · de %d a %d °C",
+  "%s · vitesse %d": "%s · velocitat %d",
+  "%s · %d °C": "%s · %d °C",
+  "%s au plus · %d °C": "fins a %s · %d °C"
 }

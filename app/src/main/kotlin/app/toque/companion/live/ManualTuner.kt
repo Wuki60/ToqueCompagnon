@@ -6,7 +6,6 @@ import app.toque.core.companion.JobWire
 import app.toque.core.companion.StateWire
 import app.toque.core.machine.Accessory
 import app.toque.core.machine.ManualSettings
-import app.toque.core.protocol.Mcc
 
 /** Réglage montré à la place de celui du robot, le temps qu'il l'applique. */
 data class ManualOverride(val speed: Int, val tempC: Int, val reverse: Boolean, val totalMs: Long)
@@ -114,9 +113,13 @@ class ManualTuner(
         local ?: ManualOverride(j.speed, if (j.tempLevel > 0) j.tempC else 0, j.reverse, j.totalMs)
 
     private fun settings(s: StateWire, j: JobWire, o: ManualOverride): ManualSettings {
-        val level = if (o.tempC == 0) 0 else Mcc.levelForCelsius(o.tempC).coerceAtLeast(0)
         val acc = if (j.accessory == "WHISK") Accessory.WHISK else Accessory.BLADE
-        return ManualSettings(60, level, o.speed, o.reverse, acc, s.limits.manual())
+        // Une température du robot hors de la table envoyée au téléphone (40 °C du Smart) reste un cran : « − » mène
+        // à 37 °C, pas à « sans chauffe ».
+        val lim = s.limits.manual().let { l -> if (o.tempC > 0 && o.tempC !in l.temperaturesC) l.copy(temperaturesC = (l.temperaturesC + o.tempC).sorted()) else l }
+        val base = ManualSettings(60, 0, o.speed, o.reverse, acc, lim)
+        // withCelsius : niveau de Toque, et celui du Smart pour 40 °C (lancé sur son écran) ; pas « sans chauffe ».
+        return if (o.tempC == 0) base else base.withCelsius(o.tempC)
     }
 
     /** Durée totale, d'une minute de plus ([dir] = 1) ou de moins (−1). */

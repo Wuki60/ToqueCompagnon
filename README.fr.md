@@ -77,7 +77,8 @@ Le téléphone ne remplace pas le robot, il le complète.
 ## Ce qu'il faut
 
 - Un téléphone ou une tablette **Android 8** ou plus récent.
-- Un robot Monsieur Cuisine **Connect** avec [Toque](https://github.com/Wuki60/MrCuisineVibeConnect) à jour.
+- Un robot Monsieur Cuisine **Connect** ou **Smart** (en test) avec [Toque](https://github.com/Wuki60/MrCuisineVibeConnect) à jour.
+  Sur le Smart, l'appli montre aussi ses programmes (Mixer, Sous-vide, Mijoter…).
 - Le téléphone et le robot sur le **même réseau Wi-Fi**.
 
 ## Langues
