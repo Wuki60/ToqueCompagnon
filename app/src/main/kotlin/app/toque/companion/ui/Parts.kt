@@ -311,13 +311,16 @@ class EmptyState(c: Context, icon: Icon.Kind, buttonLabel: String? = null, onBut
  */
 class ConfirmSheet(c: Context, title: String, message: String, confirm: String,
                    confirmStyle: Ui.Style = Ui.Style.DANGER, cancel: String = tr("Annuler"), onConfirm: () -> Unit) : FrameLayout(c) {
+    /** Annulé (bouton, fond touché, retour) ; la feuille est déjà cachée. */
+    var onCancel: () -> Unit = {}
+
     /** Le texte sous le titre (changé selon le cas, avant [show]). */
     val body: TextView = Ui.text(c, message, 15f, Ui.TEXT2, lineHeight = 21f)
 
     init {
         setBackgroundColor(Ui.SCRIM)
         isClickable = true
-        setOnClickListener { hide() }
+        setOnClickListener { cancel() }
         val card = Ui.vertical(c)
         card.background = Ui.round(Ui.SURFACE, 28f, Ui.STROKE, 1f)
         card.isClickable = true
@@ -325,7 +328,7 @@ class ConfirmSheet(c: Context, title: String, message: String, confirm: String,
         card.addView(Ui.text(c, title, 20f, Ui.TEXT, Ui.MEDIUM, lineHeight = 25f))
         card.addView(body, Ui.lp(t = 8))
         val row = Ui.horizontal(c)
-        row.addView(Ui.button(c, cancel, Ui.Style.SECONDARY, height = 52) { hide() }.also { Ui.ellipsize(it.label, 2) }, Ui.lp(0, Ui.WRAP, 1f))
+        row.addView(Ui.button(c, cancel, Ui.Style.SECONDARY, height = 52) { cancel() }.also { Ui.ellipsize(it.label, 2) }, Ui.lp(0, Ui.WRAP, 1f))
         row.addView(Ui.button(c, confirm, confirmStyle, height = 52) { hide(); onConfirm() }.also { Ui.ellipsize(it.label, 2) },
             Ui.lp(0, Ui.WRAP, 1f, l = 10))
         card.addView(row, Ui.lp(t = 18))
@@ -337,6 +340,12 @@ class ConfirmSheet(c: Context, title: String, message: String, confirm: String,
 
     fun show() = Ui.show(this, true)
     fun hide() = Ui.show(this, false)
+
+    /** Comme « Annuler ». */
+    fun cancel() {
+        hide()
+        onCancel()
+    }
 }
 
 /** Rangée d'une carte : textes à gauche (titre 15 sp, détail 13 sp facultatif), élément à droite. */

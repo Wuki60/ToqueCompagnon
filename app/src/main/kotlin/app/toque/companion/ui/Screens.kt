@@ -3,6 +3,8 @@ package app.toque.companion.ui
 import android.content.Context
 import app.toque.companion.ui.screens.AppairageScreen
 import app.toque.companion.ui.screens.AttenteScreen
+import app.toque.companion.ui.screens.CoursesActions
+import app.toque.companion.ui.screens.CoursesScreen
 import app.toque.companion.ui.screens.DiagnosticScreen
 import app.toque.companion.ui.screens.EditeurScreen
 import app.toque.companion.ui.screens.EnvoyeeScreen
@@ -51,6 +53,9 @@ enum class Route(val tab: Tab, val root: Boolean = false, val fullScreen: Boolea
     EDITEUR(Tab.RECIPES),
     ETAPE(Tab.RECIPES),
 
+    /** La liste de courses, gardée sur le téléphone. */
+    COURSES(Tab.SHOP, root = true),
+
     JOURNAL(Tab.LOG, root = true),
     ROBOT(Tab.ROBOT, root = true),
     /** Diagnostic des alertes (ligne discrète en bas de l'onglet Robot). */
@@ -79,6 +84,7 @@ class Screens(
     private val robotActions: RobotActions = object : RobotActions {},
     private val pairing: PairingActions = object : PairingActions {},
     private val edit: EditActions = object : EditActions {},
+    private val coursesActions: CoursesActions = object : CoursesActions {},
 ) {
     private val built = java.util.EnumMap<Route, Screen<*>>(Route::class.java)
     /** Écrans construits avec des couleurs qui ne sont plus celles de [Ui]. */
@@ -104,6 +110,7 @@ class Screens(
     val diagnostic get() = get(Route.DIAGNOSTIC) as DiagnosticScreen
     val editeur get() = get(Route.EDITEUR) as EditeurScreen
     val etape get() = get(Route.ETAPE) as EtapeScreen
+    val courses get() = get(Route.COURSES) as CoursesScreen
 
     operator fun get(route: Route): Screen<*> = built.getOrPut(route) { create(route) }
 
@@ -128,6 +135,7 @@ class Screens(
         Route.DIAGNOSTIC -> DiagnosticScreen(c, nav)
         Route.EDITEUR -> EditeurScreen(c, edit, nav)
         Route.ETAPE -> EtapeScreen(c, edit, nav)
+        Route.COURSES -> CoursesScreen(c, coursesActions, nav)
     }
 
     /** Les couleurs ont changé : tous les écrans construits jusqu'ici sont à refaire. */

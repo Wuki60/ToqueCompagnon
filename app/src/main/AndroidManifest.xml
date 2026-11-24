@@ -17,6 +17,8 @@
 
     <!-- Appairage : lecture du QR code affiché par le robot. Sans appareil photo, le code à 6 chiffres suffit. -->
     <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Mises à jour : installer la version téléchargée depuis GitHub (Android demande confirmation à chaque fois). -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
 
@@ -33,10 +35,9 @@
 
         <activity
             android:name=".CompanionActivity"
-            android:configChanges="keyboard|keyboardHidden|navigation|screenLayout|smallestScreenSize|layoutDirection|uiMode"
+            android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenSize|screenLayout|smallestScreenSize|layoutDirection|uiMode"
             android:exported="true"
             android:launchMode="singleTask"
-            android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize|stateHidden">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -63,6 +64,11 @@
         <!-- Boutons « Pause », « Reprendre », « +1 min » de la notification de la cuisson (intention explicite de l'appli seule). -->
         <receiver
             android:name=".alerts.NoticeActionReceiver"
+            android:exported="false" />
+
+        <!-- Résultat de l'installateur d'Android pour une mise à jour (intention explicite de l'appli seule). -->
+        <receiver
+            android:name=".update.InstallResultReceiver"
             android:exported="false" />
 
         <!-- Alarme inexacte de réveil du suivi (intention explicite de l'appli seule). -->

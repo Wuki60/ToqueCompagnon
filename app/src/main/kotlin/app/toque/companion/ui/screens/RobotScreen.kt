@@ -24,6 +24,8 @@ import app.toque.companion.ui.Tab
 import app.toque.companion.ui.Ui
 import app.toque.companion.ui.WheelSheet
 import app.toque.companion.ui.settingRow
+import app.toque.companion.update.UpdatePhase
+import app.toque.companion.update.UpdateView
 import app.toque.core.i18n.tr
 
 /** Alertes du téléphone (réglages du téléphone, pas du robot). */
@@ -60,6 +62,11 @@ data class RobotState(
     val idleNoticeShown: Boolean = true,
     /** Section « Apparence » (apparence du téléphone, celle du robot). */
     val look: LookState = LookState(),
+    /** Section « Langue » : « auto » ou un code (fr, en…), et les langues proposées (code, nom). */
+    val language: String = "auto",
+    val languages: List<Pair<String, String>> = emptyList(),
+    /** Section « Mises à jour » (versions publiées sur GitHub). */
+    val update: UpdateView = UpdateView(),
 )
 
 class RobotScreen(c: Context, private val actions: RobotActions, private val nav: Navigator) : Screen<RobotState>(c) {
@@ -73,6 +80,13 @@ class RobotScreen(c: Context, private val actions: RobotActions, private val nav
     private lateinit var blockedText: TextView
     private lateinit var blockedButton: Ui.Button
     private val battery = Ui.horizontal(c)
+    /** Langue : une pastille par langue, « Automatique » d'abord (refaites quand la liste change). */
+    private val languageChips = FlowRow(c, hGap = 8, vGap = 8)
+    private var languageCodes: List<Pair<String, String>> = emptyList()
+    private val updateTitle = Ui.text(c, "", 15f, lineHeight = 20f)
+    private val updateStatus = Ui.text(c, "", 13f, Ui.TEXT2, lineHeight = 18f)
+    private lateinit var updateButton: Ui.Button
+    private lateinit var autoUpdateSwitch: TextView
     private lateinit var backgroundSwitch: TextView
     private lateinit var idleRow: View
     private lateinit var idleDivider: View
@@ -290,6 +304,35 @@ class RobotScreen(c: Context, private val actions: RobotActions, private val nav
         look.addView(robotLook)
         column.addView(look, Ui.lp(l = 20, t = 10, r = 20))
 
+        // Langue de l'appli (comme « Langue · Language » sur le robot) ; par défaut, celle du téléphone.
+        column.addView(Ui.overline(c, tr("Langue") + " · Language"), Ui.lp(l = 20, t = 20, r = 20))
+        val lang = Ui.card(c)
+        Ui.pad(lang, 16, 12, 16, 14)
+        lang.addView(languageChips)
+        column.addView(lang, Ui.lp(l = 20, t = 10, r = 20))
+
+        // Mises à jour : les versions publiées sur GitHub.
+        column.addView(Ui.overline(c, tr("Mises à jour")), Ui.lp(l = 20, t = 20, r = 20))
+        val upd = Ui.card(c)
+        Ui.pad(upd, 16, 12, 16, 8)
+        upd.addView(updateTitle)
+        upd.addView(updateStatus, Ui.lp(t = 4))
+        updateButton = Ui.button(c, " ", Ui.Style.OUTLINE, Icon.Kind.DOWNLOAD, height = 44, textSize = 14f, iconSize = 18) {
+            val u = state?.update ?: return@button
+            when (u.phase) {
+                UpdatePhase.AVAILABLE -> actions.installUpdate()
+                UpdatePhase.ERROR -> actions.retryUpdate()
+                UpdatePhase.CHECKING, UpdatePhase.DOWNLOADING, UpdatePhase.INSTALLING -> {}
+                else -> actions.checkUpdate()
+            }
+        }
+        Ui.ellipsize(updateButton.label, 2)
+        upd.addView(updateButton, Ui.lp(Ui.WRAP, Ui.WRAP, t = 10))
+        upd.addView(Ui.divider(c), Ui.lp(Ui.MATCH, maxOf(1, Ui.dp(1)), t = 8))
+        autoUpdateSwitch = Ui.switch(c, true, tr("Vérifier au démarrage")) { on -> actions.setAutoUpdate(on) }
+        upd.addView(settingRow(c, tr("Vérifier au démarrage"), tr("À l'ouverture de l'appli, sur GitHub"), autoUpdateSwitch, 60))
+        column.addView(upd, Ui.lp(l = 20, t = 10, r = 20))
+
         // Diagnostic, discret, tout en bas.
         val diag = Ui.horizontal(c)
         diag.minimumHeight = Ui.dp(Ui.TOUCH)
@@ -348,6 +391,49 @@ class RobotScreen(c: Context, private val actions: RobotActions, private val nav
         Ui.show(manualYes, off == null)
         Ui.show(manualNo, off != null)
         bindLook(s.look)
+        bindLanguage(s)
+        bindUpdate(s.update)
+    }
+
+    private fun bindLanguage(s: RobotState) {
+        val options = listOf("auto" to tr("Automatique")) + s.languages
+        if (options != languageCodes) {
+            languageCodes = options
+            languageChips.removeAllViews()
+            for ((code, label) in options) {
+                languageChips.addView(Ui.toggleChip(c, label, code == s.language) { actions.chooseLanguage(code) }.apply { tag = code })
+            }
+        }
+        for (i in 0 until languageChips.childCount) {
+            val t = languageChips.getChildAt(i) as TextView
+            val on = t.tag == s.language
+            if (t.isSelected != on) Ui.setToggle(t, on)
+        }
+    }
+
+    private fun bindUpdate(u: UpdateView) {
+        Ui.set(updateTitle, tr("Toque Compagnon %s", u.installed))
+        Ui.set(updateStatus, when (u.phase) {
+            UpdatePhase.IDLE -> tr("Les nouvelles versions sont publiées sur GitHub.")
+            UpdatePhase.CHECKING -> tr("Recherche sur GitHub…")
+            UpdatePhase.UP_TO_DATE -> tr("C'est la dernière version.")
+            UpdatePhase.AVAILABLE -> tr("La version %s est disponible.", u.version)
+            UpdatePhase.DOWNLOADING -> tr("Téléchargement de la version %s : %d %%", u.version, u.percent)
+            UpdatePhase.INSTALLING -> tr("Confirmez l'installation dans la fenêtre d'Android.")
+            UpdatePhase.ERROR -> u.error
+        })
+        Ui.setColor(updateStatus, if (u.phase == UpdatePhase.ERROR) Ui.WARN else Ui.TEXT2)
+        val (label, style) = when (u.phase) {
+            UpdatePhase.AVAILABLE -> tr("Installer la version %s", u.version) to Ui.Style.PRIMARY
+            UpdatePhase.ERROR -> tr("Réessayer") to Ui.Style.OUTLINE
+            UpdatePhase.CHECKING -> tr("Recherche…") to Ui.Style.OUTLINE
+            UpdatePhase.DOWNLOADING, UpdatePhase.INSTALLING -> tr("Installation…") to Ui.Style.OUTLINE
+            else -> tr("Rechercher une mise à jour") to Ui.Style.OUTLINE
+        }
+        Ui.set(updateButton.label, label)
+        updateButton.setStyle(style)
+        Ui.setButtonEnabled(updateButton, u.phase != UpdatePhase.CHECKING && u.phase != UpdatePhase.DOWNLOADING && u.phase != UpdatePhase.INSTALLING)
+        Ui.setSwitch(autoUpdateSwitch, u.autoCheck)
     }
 
     private fun bindLook(l: LookState) {

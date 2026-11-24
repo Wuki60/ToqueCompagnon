@@ -155,6 +155,21 @@ class ScreenshotTest {
         Shot("EnvoyeeTitreLong", Route.ENVOYEE) { s, _ -> s.envoyee.render(Samples.envoyee().copy(title = LONG)) },
 
         // Journal et Robot.
+        // Liste de courses : à acheter, dans le panier ; vide.
+        Shot("Courses", Route.COURSES),
+        Shot("CoursesVide", Route.COURSES) { s, _ -> s.courses.render(app.toque.companion.ui.screens.CoursesState()) },
+        // Mise à jour trouvée sur GitHub, téléchargement en cours, erreur.
+        Shot("RobotMiseAJour", Route.ROBOT) { s, _ ->
+            s.robot.render(Samples.robot().copy(update = app.toque.companion.update.UpdateView("0.5.0", app.toque.companion.update.UpdatePhase.AVAILABLE, "0.5.1")))
+        },
+        Shot("RobotMiseAJourTelechargement", Route.ROBOT) { s, _ ->
+            s.robot.render(Samples.robot().copy(language = "en",
+                update = app.toque.companion.update.UpdateView("0.5.0", app.toque.companion.update.UpdatePhase.DOWNLOADING, "0.5.1", percent = 42)))
+        },
+        Shot("RobotMiseAJourErreur", Route.ROBOT) { s, _ ->
+            s.robot.render(Samples.robot().copy(update = app.toque.companion.update.UpdateView("0.5.0", app.toque.companion.update.UpdatePhase.ERROR,
+                error = "GitHub limite les vérifications : réessayez dans une heure.")))
+        },
         Shot("Journal", Route.JOURNAL),
         Shot("JournalVide", Route.JOURNAL) { s, _ -> s.journal.render(JournalState()) },
         Shot("Robot", Route.ROBOT),
@@ -326,6 +341,15 @@ class ScreenshotTest {
 
     @Test fun english() = capture("w390dp-h844dp-port-xhdpi", 1f, "-en", language = "en")
 
+    /** Ukrainien : textes plus longs, autre alphabet. */
+    @Test fun ukrainian() = capture("w390dp-h844dp-port-xhdpi", 1f, "-uk", language = "uk", only = UK_SHOTS)
+
+    /** Tablette : menu des onglets sur le côté, écran centré ; catalogue à gauche de la fiche. */
+    @Test fun tablet() = capture("w1280dp-h800dp-land-mdpi", 1f, "-tablette", only = WIDE_SHOTS, wide = true)
+
+    /** Téléphone à l'horizontale : comme une tablette, en moins haut. */
+    @Test fun phoneLandscape() = capture("w844dp-h390dp-land-xhdpi", 1f, "-paysage", only = WIDE_SHOTS, wide = true)
+
     /** Tous les écrans en thème clair (orange) : rien du thème sombre n'y reste. */
     @Test fun lightTheme() = capture("w390dp-h844dp-port-xhdpi", 1f, "-clair", theme = "light")
 
@@ -348,13 +372,17 @@ class ScreenshotTest {
                 only = setOf("Main", "Robot", "RobotRoue", "RobotApparenceRoue", "QuestionRobotRoue"), accent = hex, theme = theme)
     }
 
+    private val WIDE_SHOTS = setOf("Repos", "Main", "Recettes", "Fiche", "FicheEtapes", "Envoyee", "Courses", "Robot", "Journal", "Appairage", "Editeur")
+    private val UK_SHOTS = setOf("Repos", "Main", "Etapes", "Pesee", "Pause", "Recettes", "Fiche", "Courses", "CoursesVide", "Robot", "RobotMiseAJour",
+        "Journal", "Appairage", "AppairageCode", "Editeur", "Manuel", "Programme")
+
     /** Écran « En direct » avec une cuisson en cours, catalogue, fiche, onglet Robot, éditeur, programme en cours, apparence. */
     private val ACCENT_SHOTS = setOf("Main", "Etapes", "Programme", "Recettes", "Fiche", "Robot", "Editeur", "Attente", "Fil-Main",
         "Etape", "EtapeReglageManuel", "EtapeReglageProgramme", "EtapeReglageRefuse",
         "RobotApparence", "QuestionApparenceDeux", "QuestionRobot", "RobotRoue")
 
     private fun capture(qualifiers: String, fontScale: Float, suffix: String, language: String = "fr", only: Set<String>? = null,
-                        accent: String = "", theme: String = "") {
+                        accent: String = "", theme: String = "", wide: Boolean = false) {
         // L'anneau de la roue dessiné tout de suite, pas sur un autre fil après la capture.
         ColourWheelView.Ring.inline = true
         RuntimeEnvironment.setQualifiers(qualifiers)
@@ -366,13 +394,13 @@ class ScreenshotTest {
         // Après l'appli (qui pose l'apparence gardée, ici aucune) : celle de cette série d'images.
         Ui.setLook(accent, theme)
         try {
-            captureAll(c, suffix, only)
+            captureAll(c, suffix, only, wide)
         } finally {
             Ui.setLook("")
         }
     }
 
-    private fun captureAll(c: Context, suffix: String, only: Set<String>?) {
+    private fun captureAll(c: Context, suffix: String, only: Set<String>?, wide: Boolean = false) {
         val dm = c.resources.displayMetrics
         val w = dm.widthPixels
         val h = dm.heightPixels
@@ -387,6 +415,7 @@ class ScreenshotTest {
             val screens = Screens(c, object : LiveActions {}, shell)
             shell.screens = screens
             Samples.renderAll(screens)
+            if (wide) shell.setWide(true)
             when {
                 route == Route.APPAIRAGE -> shell.showPairing(true)
                 route.tab == Tab.LIVE && route != Route.ETAPES -> shell.showLive(route)

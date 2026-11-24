@@ -152,5 +152,5 @@ internal object Fields {
     }
 }
 
-/** Les quatre onglets de la barre du bas. */
-enum class Tab { LIVE, RECIPES, LOG, ROBOT }
+/** Les cinq onglets de la barre du bas (ou du menu sur le côté, sur un grand écran). */
+enum class Tab { LIVE, RECIPES, SHOP, LOG, ROBOT }

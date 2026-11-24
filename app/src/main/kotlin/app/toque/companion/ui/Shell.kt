@@ -3,6 +3,7 @@ package app.toque.companion.ui
 import android.content.Context
 import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -48,7 +49,16 @@ interface Navigator {
  */
 class Shell(c: Context) : LinearLayout(c), Navigator {
     lateinit var screens: Screens
-    private val content = FrameLayout(c)
+    /** Écran courant ; sur un grand écran, sa largeur est limitée et centrée (voir [CappedFrame]). */
+    private val content = CappedFrame(c, CONTENT_MAX_DP)
+    /** Grand écran, onglet Recettes : le catalogue reste à gauche de la fiche ouverte. */
+    private val side = CappedFrame(c, SIDE_MAX_DP)
+    private var sideLine = vline(c)
+    private val body = LinearLayout(c)
+    private var sideShown: Screen<*>? = null
+    /** Grand écran (tablette, téléphone à l'horizontale) : menu des onglets sur le côté, deux colonnes pour les recettes. */
+    var wide = false
+        private set
     private var bar = BottomBar(c) { select(it) }
     private var barLine = Ui.divider(c, Ui.SURFACE2)
     private var pairing = false
@@ -66,17 +76,54 @@ class Shell(c: Context) : LinearLayout(c), Navigator {
     private val hideNotice = Runnable { noticeView.visibility = View.GONE }
 
     init {
-        orientation = VERTICAL
         setBackgroundColor(Ui.BG)
-        addView(content, Ui.lp(Ui.MATCH, 0, 1f))
+        body.orientation = HORIZONTAL
+        body.addView(side, LayoutParams(0, Ui.MATCH, 0.42f))
+        body.addView(sideLine, LayoutParams(maxOf(1, Ui.dp(1)), Ui.MATCH))
+        body.addView(content, LayoutParams(0, Ui.MATCH, 0.58f))
+        side.visibility = View.GONE
+        sideLine.visibility = View.GONE
         content.addView(noticeView, Ui.flp(Ui.MATCH, Ui.WRAP, Gravity.BOTTOM).apply {
             leftMargin = Ui.dp(16); rightMargin = Ui.dp(16); bottomMargin = Ui.dp(84)
         })
-        addView(barLine)
-        addView(bar, Ui.lp())
         for (route in Route.values()) if (route.root) stacks.getOrPut(route.tab) { arrayListOf(route) }
+        arrange()
     }
 
+    /**
+     * Téléphone en hauteur : l'écran, puis la barre d'onglets en bas. Grand écran : le menu des onglets sur
+     * le côté gauche, puis l'écran (et, pour les recettes, le catalogue à côté de la fiche).
+     */
+    private fun arrange() {
+        removeAllViews()
+        bar = BottomBar(context, vertical = wide) { select(it) }
+        barLine = if (wide) vline(context) else Ui.divider(context, Ui.SURFACE2)
+        content.capped = wide
+        side.capped = wide
+        (noticeView.layoutParams as FrameLayout.LayoutParams).bottomMargin = Ui.dp(if (wide) 16 else 84)
+        if (wide) {
+            orientation = HORIZONTAL
+            addView(bar, LayoutParams(Ui.WRAP, Ui.MATCH))
+            addView(barLine, LayoutParams(maxOf(1, Ui.dp(1)), Ui.MATCH))
+            addView(body, LayoutParams(0, Ui.MATCH, 1f))
+        } else {
+            orientation = VERTICAL
+            addView(body, LayoutParams(Ui.MATCH, 0, 1f))
+            addView(barLine)
+            addView(bar, Ui.lp())
+        }
+        bar.select(tab)
+        Ui.show(bar, !current.fullScreen)
+        Ui.show(barLine, !current.fullScreen)
+    }
+
+    /** Taille de l'écran changée (rotation, fenêtre, tablette) : [w] = au moins 600 dp de large. */
+    fun setWide(w: Boolean) {
+        if (w == wide) return
+        wide = w
+        arrange()
+        refresh()
+    }
     override val current: Route get() = if (pairing) Route.APPAIRAGE else stacks.getValue(tab).last()
 
     override fun showPairing(visible: Boolean) {
@@ -124,6 +171,10 @@ class Shell(c: Context) : LinearLayout(c), Navigator {
             it.answer(false)
             return true
         }
+        (sheet as? ConfirmSheet)?.let {
+            it.cancel()
+            return true
+        }
         if (shown?.onBack() == true) return true
         if (pairing) return false
         val stack = stacks.getValue(tab)
@@ -146,6 +197,7 @@ class Shell(c: Context) : LinearLayout(c), Navigator {
         bar.select(tab)
         Ui.show(bar, !current.fullScreen)
         Ui.show(barLine, !current.fullScreen)
+        updateSide()
         if (next === shown) return
         shown?.let {
             it.onHide()
@@ -159,6 +211,27 @@ class Shell(c: Context) : LinearLayout(c), Navigator {
     }
 
     /**
+     * Grand écran, onglet Recettes, fiche (ou recette envoyée) ouverte : le catalogue reste affiché à gauche,
+     * comme sur une tablette ; toucher une autre carte change la fiche à droite. Sinon, une seule colonne.
+     */
+    private fun updateSide() {
+        val want = if (wide && !pairing && tab == Tab.RECIPES && current in SPLIT) screens[Route.RECETTES] else null
+        if (want === sideShown) return
+        sideShown?.let {
+            it.onHide()
+            side.removeView(it.view)
+        }
+        sideShown = want
+        if (want != null) {
+            (want.view.parent as? ViewGroup)?.removeView(want.view)
+            side.addView(want.view, Ui.flp())
+            want.onShow()
+        }
+        Ui.show(side, want != null)
+        Ui.show(sideLine, want != null)
+    }
+
+    /**
      * Les couleurs de [Ui] ont changé (thème ou couleur du téléphone) : la coquille et sa barre d'onglets
      * les prennent tout de suite, les écrans sont refaits avec elles ([Screens.rebuildStale]). Seul l'écran
      * affiché, s'il tient un travail en cours (éditeur, feuille de confirmation, champ en saisie), le garde :
@@ -167,15 +240,12 @@ class Shell(c: Context) : LinearLayout(c), Navigator {
     fun restyle() {
         // La coquille elle-même : fond, barre d'onglets refaite, message.
         setBackgroundColor(Ui.BG)
-        val at = indexOfChild(barLine)
-        removeView(barLine)
-        removeView(bar)
-        barLine = Ui.divider(context, Ui.SURFACE2)
-        bar = BottomBar(context) { select(it) }
-        addView(barLine, at)
-        addView(bar, at + 1, Ui.lp())
-        Ui.show(bar, !current.fullScreen)
-        Ui.show(barLine, !current.fullScreen)
+        arrange()
+        val sl = vline(context)
+        body.removeView(sideLine)
+        body.addView(sl, 1, LayoutParams(maxOf(1, Ui.dp(1)), Ui.MATCH))
+        sl.visibility = sideLine.visibility
+        sideLine = sl
         noticeView.background = Ui.round(Ui.SURFACE3, 18f, Ui.STROKE, 1f)
         noticeView.setTextColor(Ui.TEXT)
         bar.select(tab)
@@ -240,6 +310,12 @@ class Shell(c: Context) : LinearLayout(c), Navigator {
         // Un écran caché est refait tout de suite (il reprend son état et le texte de ses champs) ;
         // l'écran affiché attend s'il tient un travail en cours.
         val done = screens.rebuildStale { route, screen -> route != current || !holdsWork(screen) }
+        // Le catalogue affiché à gauche, refait, prend la place de l'ancien.
+        if (sideShown != null && sideShown !== screens[Route.RECETTES]) {
+            sideShown?.let { it.onHide(); side.removeView(it.view) }
+            sideShown = null
+            updateSide()
+        }
         if (swap && current in done) {
             val next = screens[current]
             shown?.let {
@@ -271,26 +347,41 @@ class Shell(c: Context) : LinearLayout(c), Navigator {
     }
 
     companion object {
+        /** Largeur maximale de l'écran et du catalogue de gauche sur un grand écran (dp). */
+        const val CONTENT_MAX_DP = 760
+        const val SIDE_MAX_DP = 560
+        /** Écrans de l'onglet Recettes affichés à droite du catalogue sur un grand écran. */
+        val SPLIT: Set<Route> = java.util.EnumSet.of(Route.FICHE, Route.ENVOYEE)
+
+        private fun vline(c: Context) = View(c).apply { setBackgroundColor(Ui.SURFACE2) }
+
         /** Écrans où une question peut se poser (voir [quiet]). */
-        val QUIET: Set<Route> = java.util.EnumSet.of(Route.REPOS, Route.RECETTES, Route.FICHE, Route.JOURNAL, Route.ROBOT, Route.DIAGNOSTIC)
+        val QUIET: Set<Route> = java.util.EnumSet.of(Route.REPOS, Route.RECETTES, Route.FICHE, Route.COURSES, Route.JOURNAL, Route.ROBOT, Route.DIAGNOSTIC)
     }
 
     /** Texte du message affiché, null s'il est caché (tests). */
     val noticeText: String? get() = if (noticeView.visibility == View.VISIBLE) noticeView.text.toString() else null
 }
 
-/** Barre d'onglets : icône 24 dp et libellé 12 sp, de la couleur d'accent pour l'onglet affiché. */
-class BottomBar(c: Context, onSelect: (Tab) -> Unit) : LinearLayout(c) {
+/**
+ * Barre d'onglets : icône 24 dp et libellé 12 sp, de la couleur d'accent pour l'onglet affiché. [vertical] :
+ * menu sur le côté (grand écran), les onglets les uns sous les autres.
+ */
+class BottomBar(c: Context, vertical: Boolean = false, onSelect: (Tab) -> Unit) : LinearLayout(c) {
     private class Item(val root: LinearLayout, val icon: Icon, val label: TextView)
     private val items = EnumMap<Tab, Item>(Tab::class.java)
 
     init {
-        orientation = HORIZONTAL
-        Ui.pad(this, 12, 8, 12, 14)
+        orientation = if (vertical) VERTICAL else HORIZONTAL
+        if (vertical) {
+            Ui.pad(this, 8, 20, 8, 12)
+            minimumWidth = Ui.dp(88)
+        } else Ui.pad(this, 12, 8, 12, 14)
         for (t in Tab.values()) {
             val (kind, label) = when (t) {
                 Tab.LIVE -> Icon.Kind.POT to tr("En direct")
                 Tab.RECIPES -> Icon.Kind.BOOK to tr("Recettes")
+                Tab.SHOP -> Icon.Kind.BASKET to tr("Courses")
                 Tab.LOG -> Icon.Kind.LIST to tr("Journal")
                 Tab.ROBOT -> Icon.Kind.SLIDERS to tr("Robot")
             }
@@ -305,7 +396,8 @@ class BottomBar(c: Context, onSelect: (Tab) -> Unit) : LinearLayout(c) {
             root.isFocusable = true
             root.background = Ui.pressable(Ui.round(0, 24f), 24f)
             root.setOnClickListener { onSelect(t) }
-            addView(root, LayoutParams(0, Ui.WRAP, 1f))
+            if (vertical) addView(root, LayoutParams(Ui.dp(76), Ui.dp(68)).apply { bottomMargin = Ui.dp(6) })
+            else addView(root, LayoutParams(0, Ui.WRAP, 1f))
             items[t] = Item(root, icon, text)
         }
     }
@@ -317,5 +409,25 @@ class BottomBar(c: Context, onSelect: (Tab) -> Unit) : LinearLayout(c) {
             item.label.setTextColor(if (on) Ui.ACCENT_INK else Ui.TEXT2)
             item.root.isSelected = on
         }
+    }
+}
+
+/**
+ * Cadre dont le contenu ne dépasse pas [maxDp] de large quand [capped] : au-delà, il est centré (marges
+ * égales), pour que les écrans pensés pour un téléphone restent lisibles sur une tablette.
+ */
+class CappedFrame(c: Context, private val maxDp: Int) : FrameLayout(c) {
+    var capped = false
+        set(v) {
+            if (v == field) return
+            field = v
+            requestLayout()
+        }
+
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        val w = MeasureSpec.getSize(widthMeasureSpec)
+        val pad = if (capped) maxOf(0, (w - Ui.dp(maxDp)) / 2) else 0
+        if (paddingLeft != pad || paddingRight != pad) setPadding(pad, paddingTop, pad, paddingBottom)
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
     }
 }

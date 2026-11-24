@@ -41,8 +41,11 @@ interface RecipeActions {
     /** Étoile touchée (fiche, carte) quand le robot le permet : il enregistre le favori, l'étoile change tout de suite. */
     fun setFavorite(id: String, favorite: Boolean) {}
 
-    /** « Partager la liste » de la fiche [id] : ses ingrédients, en texte, vers l'appli choisie. */
+    /** « Partager les ingrédients » de la fiche [id] : en texte, vers l'appli choisie. */
     fun shareIngredients(id: String) {}
+
+    /** « Ajouter à la liste » de la fiche [id] : ses ingrédients, aux quantités affichées, dans l'onglet Courses. */
+    fun addToList(id: String) {}
 
     /** « Écrire une recette » (sous la pastille « Mes recettes ») quand le robot le permet. */
     fun writeRecipe() {}
@@ -179,6 +182,16 @@ interface RobotActions {
 
     /** « Appliquer au robot » : l'apparence du téléphone sur le robot. */
     fun sendLookToRobot() {}
+
+    /** Langue de l'appli : « auto » (celle du téléphone) ou un code (fr, en…). */
+    fun chooseLanguage(code: String) {}
+
+    /** Mises à jour : rechercher sur GitHub, installer la version trouvée, réessayer après une erreur. */
+    fun checkUpdate() {}
+    fun installUpdate() {}
+    fun retryUpdate() {}
+    /** « Vérifier au démarrage ». */
+    fun setAutoUpdate(on: Boolean) {}
 }
 
 /** Écran Appairage. */

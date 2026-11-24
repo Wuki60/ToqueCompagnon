@@ -450,7 +450,26 @@ class CatalogFlow(
         return detail?.takeIf { it.id == id }
     }
 
-    /** « Partager la liste » : les ingrédients de la fiche affichée, en texte, vers l'appli choisie. */
+    /** Liste de courses du téléphone (onglet Courses) : ajoute les ingrédients d'une fiche, rend leur nombre. */
+    var addToCart: ((RecipeDetail) -> Int)? = null
+
+    /** « Ajouter à la liste » : les ingrédients de la fiche affichée, au nombre de personnes choisi. */
+    override fun addToList(id: String) {
+        val f = fiche?.takeIf { it.id == id && !it.loading && it.error == null } ?: return
+        val d = shownDetail(id)
+        if (d == null || f.quantitiesPending) {
+            notice(tr("Les quantités arrivent du robot : réessayez dans un instant."))
+            return
+        }
+        val n = addToCart?.invoke(d) ?: return
+        notice(when (n) {
+            0 -> tr("Aucun ingrédient à ajouter.")
+            1 -> tr("1 ingrédient ajouté à la liste de courses.")
+            else -> tr("%d ingrédients ajoutés à la liste de courses.", n)
+        })
+    }
+
+    /** « Partager les ingrédients » : ceux de la fiche affichée, en texte, vers l'appli choisie. */
     override fun shareIngredients(id: String) {
         val f = fiche?.takeIf { it.id == id && !it.loading && it.error == null } ?: return
         val d = shownDetail(id)

@@ -1,5 +1,10 @@
 package app.toque.companion
 
+import app.toque.companion.flows.CoursesFlow
+import app.toque.companion.flows.LanguageChoice
+import app.toque.companion.update.UpdatePhase
+import app.toque.companion.update.UpdateView
+import app.toque.companion.ui.ConfirmSheet
 import android.Manifest
 import android.app.Activity
 import android.app.NotificationManager
@@ -64,6 +69,8 @@ class CompanionActivity : Activity(), RobotLink.Listener {
         private set
     lateinit var appearance: AppearanceFlow
         private set
+    lateinit var courses: CoursesFlow
+        private set
     private val app get() = application as CompanionApp
     private val main = Handler(Looper.getMainLooper())
     private var unsubscribe: (() -> Unit)? = null
@@ -96,7 +103,25 @@ class CompanionActivity : Activity(), RobotLink.Listener {
             DraftStore(java.io.File(noBackupFilesDir, "brouillons")), schedule, notice = { shell.notice(it) },
             onSaved = { id, leaving -> catalog.recipeSaved(id, leaving) })
         catalog.editor = editor
-        screens = Screens(this, live, shell, catalog, app.pictures, journal, robot, pairing, editor)
+        // Liste de courses du téléphone (onglet Courses) ; les fiches y ajoutent leurs ingrédients.
+        courses = CoursesFlow(load = { app.loadCart() }, save = { app.saveCart(it) }, render = { screens.courses.render(it) },
+            share = { subject, text -> shareText(subject, text) }, notice = { shell.notice(it) })
+        catalog.addToCart = { courses.addRecipe(it) }
+        // Langue (onglet Robot) : l'activité est refaite dans la nouvelle langue.
+        robot.language = object : LanguageChoice {
+            override fun setting() = CompanionLanguages.setting(this@CompanionActivity)
+            override fun options() = CompanionLanguages.options()
+            override fun choose(code: String) {
+                if (code == setting()) return
+                CompanionLanguages.choose(this@CompanionActivity, code)
+                recreate()
+            }
+        }
+        // Mises à jour depuis GitHub (onglet Robot, et proposée à l'ouverture de l'appli).
+        robot.updates = app.updates
+        app.updates.changed = { updateChanged() }
+        app.updates.offer = { offerUpdate(it, 0) }
+        screens = Screens(this, live, shell, catalog, app.pictures, journal, robot, pairing, editor, courses)
         shell.screens = screens
         live.screens = screens
         live.onOpenSentRecipe = { catalog.showWaiting() }
@@ -110,11 +135,50 @@ class CompanionActivity : Activity(), RobotLink.Listener {
             // De retour sur un écran calme : la question sur l'apparence du robot, si elle attend.
             appearance.check()
         }
+        courses.show()
+        shell.setWide(resources.configuration.screenWidthDp >= WIDE_DP)
         pairing.reset(cameraAccess())
         shell.refresh()
         setContentView(shell)
         unsubscribe = link.addListener(this)
         onStatus(link.status)
+        // Pas de réseau vers GitHub pendant les tests (Robolectric).
+        if (Build.FINGERPRINT != "robolectric") app.updates.start()
+    }
+
+    // ------------------------------------------------------------------ mises à jour
+
+    private var lastUpdatePhase = UpdatePhase.IDLE
+
+    /** La mise à jour a avancé : onglet Robot redessiné ; un échec du téléchargement ou de l'installation est dit. */
+    private fun updateChanged() {
+        robot.refresh()
+        val v = app.updates.view
+        if (v.phase == UpdatePhase.ERROR && (lastUpdatePhase == UpdatePhase.DOWNLOADING || lastUpdatePhase == UpdatePhase.INSTALLING)) shell.notice(v.error)
+        lastUpdatePhase = v.phase
+    }
+
+    /**
+     * Version plus récente trouvée à l'ouverture : proposée par une feuille, sur un écran calme (pas pendant
+     * une saisie, une cuisson suivie ou une autre question) ; essayé chaque seconde pendant deux minutes.
+     */
+    private fun offerUpdate(v: UpdateView, tries: Int) {
+        if (isFinishing || isDestroyed || app.updates.view.phase != UpdatePhase.AVAILABLE) return
+        val calm = !shell.sheetShown && (shell.quiet() || shell.current == Route.APPAIRAGE)
+        if (!calm) {
+            if (tries < 120) main.postDelayed({ offerUpdate(v, tries + 1) }, 1_000)
+            return
+        }
+        val sheet = ConfirmSheet(this, tr("Mise à jour disponible"),
+            tr("Toque Compagnon %s est sortie (vous avez la %s). L'installer maintenant ? Android vous demandera de confirmer.", v.version, v.installed),
+            tr("Installer"), Ui.Style.PRIMARY, tr("Plus tard")) {
+            shell.hideSheet()
+            app.updates.install()
+            shell.notice(tr("Téléchargement de la mise à jour…"))
+        }
+        sheet.onCancel = { shell.hideSheet() }
+        shell.showSheet(sheet)
+        sheet.show()
     }
 
     /** L'écran Appairage est affiché (pas de robot appairé). */
@@ -344,6 +408,8 @@ class CompanionActivity : Activity(), RobotLink.Listener {
     }
 
     override fun onDestroy() {
+        app.updates.changed = {}
+        app.updates.offer = {}
         unsubscribe?.invoke()
         shell.close()
         catalog.close()
@@ -361,7 +427,15 @@ class CompanionActivity : Activity(), RobotLink.Listener {
         super.onBackPressed()
     }
 
+    /** Rotation, fenêtre redimensionnée, tablette : l'activité n'est pas refaite, la coquille se réarrange. */
+    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+        super.onConfigurationChanged(newConfig)
+        shell.setWide(newConfig.screenWidthDp >= WIDE_DP)
+    }
+
     companion object {
+        /** Au moins 600 dp de large : menu sur le côté et deux colonnes pour les recettes. */
+        const val WIDE_DP = 600
         private const val CAMERA_REQUEST = 42
     }
 }

@@ -3,6 +3,8 @@ package app.toque.companion.ui
 import app.toque.companion.ui.screens.AlertKind
 import app.toque.companion.ui.screens.AppairageState
 import app.toque.companion.ui.screens.AttenteState
+import app.toque.companion.ui.screens.CourseRow
+import app.toque.companion.ui.screens.CoursesState
 import app.toque.companion.ui.screens.EditBanner
 import app.toque.companion.ui.screens.EditLine
 import app.toque.companion.ui.screens.EditPhase
@@ -303,6 +305,8 @@ object Samples {
         pairMethod = PairMethod.QR,
         pairedOn = "21 novembre",
         alerts = setOf(AlertKind.WAITING, AlertKind.STEP_END, AlertKind.PAUSE, AlertKind.TEMP),
+        languages = listOf("fr" to "Français", "ca" to "Català", "de" to "Deutsch", "en" to "English", "es" to "Español", "uk" to "Українська"),
+        update = app.toque.companion.update.UpdateView(installed = "0.5.0", phase = app.toque.companion.update.UpdatePhase.UP_TO_DATE, version = "0.5.0"),
     )
 
     fun appairage() = AppairageState()
@@ -374,6 +378,16 @@ object Samples {
         refused = "Étape 2 : En chauffe, vitesse 3 maximum", typed = true, settingRefused = true,
         settingNote = tr("Nouveau réglage : à confirmer une fois sur le robot avant le premier lancement"))
 
+    fun courses() = CoursesState(
+        toBuy = listOf(
+            CourseRow(1, "850 g de potimarron", "Velouté de potimarron · Gratin"),
+            CourseRow(2, "2 oignons", "Velouté de potimarron"),
+            CourseRow(3, "100 g de crème", "Velouté de potimarron"),
+            CourseRow(4, "Café"),
+        ),
+        inCart = listOf(CourseRow(5, "40 g de beurre", "Velouté de potimarron · Gratin", checked = true)),
+    )
+
     fun renderAll(s: Screens) {
         s.repos.render(repos())
         s.main.render(main())
@@ -394,5 +408,6 @@ object Samples {
         s.diagnostic.render(diagnostic())
         s.editeur.render(editeur())
         s.etape.render(etape())
+        s.courses.render(courses())
     }
 }

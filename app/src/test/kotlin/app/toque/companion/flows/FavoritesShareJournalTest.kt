@@ -115,8 +115,8 @@ class FavoritesShareJournalTest {
         onMain { c.flow.filter(RecipeChip.ALL) }
         eventually("toutes") { c.list.filter == RecipeChip.ALL && !c.list.loading && c.list.items.isNotEmpty() }
         val b = onMain { c.list.items.first { !it.favorite }.id }
-        onMain { c.flow.setFavorite(b, true) }
-        assertTrue(onMain { c.list.items.first { it.id == b }.favorite })
+        // L'étoile change tout de suite (vu dans le même passage du fil principal : le refus peut revenir très vite).
+        assertTrue(onMain { c.flow.setFavorite(b, true); c.list.items.first { it.id == b }.favorite })
         eventually("remise") { !c.list.items.first { it.id == b }.favorite && c.notices.isNotEmpty() }
         assertTrue(onMain { c.notices.last() }, onMain { c.notices.last() }.contains("Refusé pour l'essai"))
         assertEquals(null, robot.favorites[b])

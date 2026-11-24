@@ -13,8 +13,12 @@ them on the robot.
 
 Download **`ToqueCompagnon-x.y.z.apk`** straight from the
 **[Releases](https://github.com/Wuki60/ToqueCompagnon/releases/latest)** on your phone or tablet, then
-open it. Android asks you to allow installs from the browser: accept. No Play Store, no account. To
-update, do the same with the new version: it installs over the old one without losing anything.
+open it. Android asks you to allow installs from the browser: accept. No Play Store, no account.
+
+After that, the app keeps itself up to date: when it opens, it checks GitHub for a new version and
+offers it to you (Android asks you to confirm). You can also check by hand in the **Robot › Updates**
+tab, or turn off the check at start-up. The new version installs over the old one without losing
+anything.
 
 ## What the app does
 
@@ -42,9 +46,10 @@ update, do the same with the new version: it installs over the old one without l
   chosen.
 - The same ingredient from several recipes is added up (200 g + 300 g of flour = 500 g).
 - Tick items off in the shop, add your own, and share the list by text or message in one tap.
+- The list stays on the phone and works without the robot.
 
 ### On phones and tablets
-- On a phone: three tabs at the bottom, **Robot**, **Recipes**, **Shopping**.
+- On a phone: five tabs at the bottom, **Live**, **Recipes**, **Shopping**, **Log**, **Robot**.
 - On a tablet or in landscape: a side menu and two columns (the list on the left, the recipe on the
   right).
 - The same look as Toque: midnight blue or light theme, the same accent colours, the same icons.
@@ -61,7 +66,8 @@ The phone does not replace the robot, it complements it.
 
 ## Privacy
 
-- **Local network only**: no account, no server, nothing goes through the Internet.
+- **Local network only**: no account, no server. Only the update check goes through the Internet, to
+  GitHub (and it can be turned off in the Robot tab).
 - A phone is linked with a **code shown on the robot**. Each phone gets its own key, which the robot
   only keeps in hashed form and can revoke at any time.
 - The robot only listens on the network when at least one phone is linked or the pairing screen is open.
@@ -83,7 +89,8 @@ The app is translated **with the same system as Toque**: texts are written in Fr
 
 - `en.json` must be complete; other languages may have gaps (the text then stays in French), but no
   unknown text and the same `%s` / `%d`. A test checks it.
-- Available in French, English, German, Spanish, Catalan and Ukrainian, like Toque.
+- Available in French, English, German, Spanish, Catalan and Ukrainian, like Toque. By default the app
+  follows the phone's language; change it in **Robot › Langue · Language**.
 
 ## Building
 

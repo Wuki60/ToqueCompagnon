@@ -56,6 +56,10 @@ class RobotFlow(
 ) : RobotActions, RobotLink.Listener {
     /** Apparence du téléphone et du robot (section « Apparence ») ; null : section par défaut. */
     var appearance: AppearanceFlow? = null
+    /** Mises à jour depuis GitHub (section « Mises à jour ») ; null : section par défaut. */
+    var updates: app.toque.companion.update.UpdateFlow? = null
+    /** Langue de l'appli (section « Langue ») : réglage, langues proposées, et le changement. */
+    var language: LanguageChoice? = null
     private var robot: StateWire? = null
     private var forgetting = false
     var state: RobotState? = null
@@ -88,6 +92,9 @@ class RobotFlow(
             batteryRestricted = background.batteryRestricted(),
             idleNoticeShown = background.idleNoticeShown(),
             look = appearance?.state() ?: LookState(),
+            language = language?.setting() ?: "auto",
+            languages = language?.options().orEmpty(),
+            update = updates?.view ?: app.toque.companion.update.UpdateView(),
         )
         if (st != state) {
             state = st
@@ -125,6 +132,11 @@ class RobotFlow(
     override fun chooseTheme(light: Boolean) { appearance?.chooseTheme(light) }
     override fun takeRobotLook() { appearance?.takeRobot() }
     override fun sendLookToRobot() { appearance?.sendToRobot() }
+    override fun chooseLanguage(code: String) { language?.choose(code) }
+    override fun checkUpdate() { updates?.check() }
+    override fun installUpdate() { updates?.install() }
+    override fun retryUpdate() { updates?.retry() }
+    override fun setAutoUpdate(on: Boolean) { updates?.setAutoCheck(on) }
 
     override fun onState(state: StateWire, receivedMono: Long) {
         robot = state
@@ -163,4 +175,11 @@ class RobotFlow(
             ScreenAlert.TEMP -> AlertKind.TEMP
         }
     }
+}
+
+/** Langue de l'appli, vue de l'onglet Robot : réglage (« auto » ou un code), langues (code, nom), changement. */
+interface LanguageChoice {
+    fun setting(): String
+    fun options(): List<Pair<String, String>>
+    fun choose(code: String)
 }

@@ -20,6 +20,10 @@ import app.toque.companion.live.LivePresenter
 import app.toque.companion.ui.Ui
 import app.toque.companion.flows.LookStore
 import java.io.File
+import android.util.AtomicFile
+import app.toque.companion.update.UpdateFlow
+import app.toque.companion.update.UpdatePrefs
+import app.toque.companion.update.Updater
 import java.util.concurrent.Executors
 
 /**
@@ -76,6 +80,44 @@ open class CompanionApp : Application() {
             schedule = { ms, r -> main.postDelayed(r, ms) }, log = { diag.add(it) })
         pictures = RecipePictures(link, cacheDir)
         pictures.setVisible(visible)
+        // Mises à jour depuis GitHub : seule partie de l'appli qui passe par Internet.
+        val updater = Updater(this)
+        updates = UpdateFlow(updater.installedVersion, updater, PrefsUpdatePrefs(getSharedPreferences("mises-a-jour", MODE_PRIVATE)),
+            background = { job -> worker.execute { job() } }, main = { job -> main.post { job() } })
+        Updater.onInstallError = { updates.installFailed(it) }
+    }
+
+    /** Travail bloquant de l'appli hors du fil principal : mises à jour, liste de courses. */
+    private val worker = Executors.newSingleThreadExecutor { r -> Thread(r, "toque-travail").apply { isDaemon = true } }
+
+    lateinit var updates: UpdateFlow
+        private set
+
+    /** Liste de courses : un petit fichier privé, jamais sauvegardé ailleurs ni envoyé au robot. */
+    private val cartFile by lazy { AtomicFile(File(filesDir, "courses.json")) }
+
+    fun loadCart(): String? = try {
+        String(cartFile.readFully(), Charsets.UTF_8)
+    } catch (_: java.io.FileNotFoundException) {
+        null
+    } catch (e: Exception) {
+        diag.add("liste de courses illisible : $e")
+        null
+    }
+
+    /** Écrit la liste hors du fil principal ; les écritures se suivent dans l'ordre. */
+    fun saveCart(json: String) {
+        worker.execute {
+            var out: java.io.FileOutputStream? = null
+            try {
+                out = cartFile.startWrite()
+                out.write(json.toByteArray(Charsets.UTF_8))
+                cartFile.finishWrite(out)
+            } catch (e: Exception) {
+                out?.let { cartFile.failWrite(it) }
+                diag.add("liste de courses non écrite : $e")
+            }
+        }
     }
 
     /** Apparence choisie sur le téléphone (thème, couleur), à part de celle du robot. */
@@ -147,4 +189,14 @@ open class CompanionApp : Application() {
     companion object {
         private const val ANSWER_LOCK_MS = 10_000L
     }
+}
+
+/** Réglages des mises à jour dans les préférences de l'appli. */
+private class PrefsUpdatePrefs(private val p: android.content.SharedPreferences) : UpdatePrefs {
+    override var autoCheck: Boolean
+        get() = p.getBoolean("auto", true)
+        set(v) { p.edit().putBoolean("auto", v).apply() }
+    override var lastCheckMs: Long
+        get() = p.getLong("derniere", 0L)
+        set(v) { p.edit().putLong("derniere", v).apply() }
 }

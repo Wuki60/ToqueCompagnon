@@ -21,8 +21,8 @@ class Icon(context: Context, var kind: Kind, color: Int) : View(context) {
         LIST, SLIDERS, SCREEN,
         // Compagnon : appairage (appareil photo, QR code) et envoi d'une recette au robot.
         CAMERA, QR, SEND,
-        // Compagnon : partage de la liste de courses.
-        SHARE,
+        // Compagnon : partage de la liste de courses, onglet Courses.
+        SHARE, BASKET,
     }
 
     var color: Int = color
@@ -222,6 +222,14 @@ class Icon(context: Context, var kind: Kind, color: Int) : View(context) {
             Kind.SHARE -> {
                 canvas.drawCircle(18f, 5.5f, 2.5f, stroke); canvas.drawCircle(6f, 12f, 2.5f, stroke); canvas.drawCircle(18f, 18.5f, 2.5f, stroke)
                 canvas.drawLine(8.2f, 10.8f, 15.8f, 6.7f, stroke); canvas.drawLine(8.2f, 13.2f, 15.8f, 17.3f, stroke)
+            }
+            Kind.BASKET -> {
+                // Panier : anse, bord, corps évasé et trois lattes.
+                p.moveTo(8f, 9f); p.lineTo(10.5f, 3.5f); p.moveTo(16f, 9f); p.lineTo(13.5f, 3.5f); canvas.drawPath(p, stroke)
+                canvas.drawLine(3f, 9f, 21f, 9f, stroke)
+                p.reset(); p.moveTo(4.5f, 9f); p.lineTo(6.2f, 19f); p.quadTo(6.5f, 20.5f, 8f, 20.5f); p.lineTo(16f, 20.5f)
+                p.quadTo(17.5f, 20.5f, 17.8f, 19f); p.lineTo(19.5f, 9f); canvas.drawPath(p, stroke)
+                canvas.drawLine(9.5f, 12.5f, 9.8f, 17f, stroke); canvas.drawLine(14.5f, 12.5f, 14.2f, 17f, stroke)
             }
             Kind.POT -> {
                 rect.set(4f, 9f, 20f, 20f); canvas.drawRoundRect(rect, 3f, 3f, stroke)

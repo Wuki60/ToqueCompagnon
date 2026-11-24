@@ -167,7 +167,8 @@ class LookTest {
         val fresh = screens.robot
         assertNotSame(old, fresh)
         assertEquals(old.state, fresh.state)
-        assertSame(shell, fresh.view.parent?.parent)
+        // Écran → cadre de l'écran → colonnes → coquille.
+        assertSame(shell, fresh.view.parent?.parent?.parent)
         assertTrue(old.view.parent == null)
         layout(shell)
         assertEquals(y, find(fresh.view, ScrollView::class.java)!!.scrollY)

@@ -108,7 +108,9 @@ class FicheScreen(c: Context, private val actions: RecipeActions, private val pi
     /** Étoile du robot qui enregistre les favoris choisis ici : un bouton, pleine ou creuse. */
     private lateinit var star: View
     private lateinit var starIcon: Icon
-    /** « Partager la liste de courses », sous les ingrédients. */
+    /** « Ajouter à la liste » et « Partager les ingrédients », sous les ingrédients. */
+    private lateinit var listRow: View
+    private lateinit var addButton: Ui.Button
     private lateinit var shareButton: Ui.Button
     private val thumb = Thumbnail(c, 24f, 48f)
     private val facts = FlowRow(c, hGap = 8, vGap = 8)
@@ -183,11 +185,19 @@ class FicheScreen(c: Context, private val actions: RecipeActions, private val pi
         buildServings()
         column.addView(servingsBox, Ui.lp(l = 20, t = 12, r = 20))
         column.addView(ingredients, Ui.lp(l = 20, t = 12, r = 20))
-        shareButton = Ui.button(c, tr("Partager la liste de courses"), Ui.Style.GHOST, Icon.Kind.SHARE, height = 44, textSize = 14f, iconSize = 18) {
+        val listButtons = FlowRow(c, hGap = 8, vGap = 4)
+        addButton = Ui.button(c, tr("Ajouter à la liste"), Ui.Style.OUTLINE, Icon.Kind.BASKET, height = 44, textSize = 14f, iconSize = 18) {
+            state?.let { actions.addToList(it.id) }
+        }
+        Ui.ellipsize(addButton.label, 2)
+        listButtons.addView(addButton)
+        shareButton = Ui.button(c, tr("Partager les ingrédients"), Ui.Style.GHOST, Icon.Kind.SHARE, height = 44, textSize = 14f, iconSize = 18) {
             state?.let { actions.shareIngredients(it.id) }
         }
         Ui.ellipsize(shareButton.label, 2)
-        column.addView(shareButton, Ui.lp(Ui.WRAP, Ui.WRAP, l = 20, t = 6, r = 20))
+        listButtons.addView(shareButton)
+        listRow = listButtons
+        column.addView(listButtons, Ui.lp(l = 20, t = 8, r = 20))
         Ui.pad(steps, 16, 14, 16, 14)
         column.addView(steps, Ui.lp(l = 20, t = 12, r = 20))
         column.addView(status, Ui.lp(l = 20, t = 12, r = 20))
@@ -299,7 +309,7 @@ class FicheScreen(c: Context, private val actions: RecipeActions, private val pi
         val s = state ?: return
         val ready = !s.loading && s.error == null
         Ui.show(ingredients, ready && !stepsTab && s.ingredients.isNotEmpty())
-        Ui.show(shareButton, ready && !stepsTab && s.ingredients.isNotEmpty())
+        Ui.show(listRow, ready && !stepsTab && s.ingredients.isNotEmpty())
         Ui.show(servingsBox, ready && !stepsTab && s.baseServings != null && s.servings != null)
         Ui.show(steps, ready && stepsTab && s.steps.isNotEmpty())
         val empty = ready && (if (stepsTab) s.steps.isEmpty() else s.ingredients.isEmpty())

@@ -14,8 +14,12 @@ téléphone, et vous les retrouvez sur le robot.
 Téléchargez **`ToqueCompagnon-x.y.z.apk`** directement dans les
 **[Releases](https://github.com/Wuki60/ToqueCompagnon/releases/latest)**, depuis le téléphone ou la
 tablette, puis ouvrez-le. Android demande d'autoriser l'installation depuis le navigateur : acceptez.
-Pas de Play Store, pas de compte. Pour mettre à jour, même chose avec la nouvelle version : elle
-s'installe par-dessus l'ancienne, sans rien perdre.
+Pas de Play Store, pas de compte.
+
+Ensuite, l'appli se met à jour toute seule : à l'ouverture, elle regarde s'il y a une nouvelle version
+sur GitHub et vous la propose (Android demande de confirmer). On peut aussi vérifier à la main dans
+l'onglet **Robot › Mises à jour**, ou couper la vérification au démarrage. La nouvelle version s'installe
+par-dessus l'ancienne, sans rien perdre.
 
 ## Ce que fait l'appli
 
@@ -44,9 +48,10 @@ s'installe par-dessus l'ancienne, sans rien perdre.
 - Les mêmes ingrédients de plusieurs recettes sont additionnés (200 g + 300 g de farine = 500 g).
 - On coche au fil du magasin, on ajoute ses propres articles, et on partage la liste par SMS ou par
   message en un appui.
+- La liste reste sur le téléphone et marche sans le robot.
 
 ### Sur téléphone et sur tablette
-- Sur téléphone : trois onglets en bas, **Robot**, **Recettes**, **Courses**.
+- Sur téléphone : cinq onglets en bas, **En direct**, **Recettes**, **Courses**, **Journal**, **Robot**.
 - Sur tablette ou à l'horizontale : un menu sur le côté et deux colonnes (la liste à gauche, la recette
   à droite).
 - Le même look que Toque : bleu nuit ou thème clair, les mêmes couleurs d'accent, les mêmes icônes.
@@ -63,7 +68,8 @@ Le téléphone ne remplace pas le robot, il le complète.
 
 ## Vie privée
 
-- **Réseau local uniquement** : pas de compte, pas de serveur, rien ne passe par Internet.
+- **Réseau local uniquement** : pas de compte, pas de serveur. Seule la vérification des mises à jour
+  passe par Internet, vers GitHub (et elle se coupe dans l'onglet Robot).
 - On relie un téléphone avec un **code affiché sur le robot**. Chaque téléphone reçoit sa propre clé,
   que le robot ne garde que sous forme chiffrée et peut révoquer à tout moment.
 - Le robot n'écoute le réseau que si au moins un téléphone est relié ou si l'écran de liaison est ouvert.
@@ -85,7 +91,8 @@ L'appli se traduit **avec le même système que Toque** : les textes sont écrit
 
 - `en.json` doit être complet ; les autres langues peuvent avoir des manques (le texte reste alors en
   français), mais aucun texte inconnu et les mêmes `%s` / `%d`. Un test le vérifie.
-- Langues disponibles : français, anglais, allemand, espagnol, catalan et ukrainien, comme Toque.
+- Langues disponibles : français, anglais, allemand, espagnol, catalan et ukrainien, comme Toque. Par
+  défaut l'appli suit la langue du téléphone ; on la change dans **Robot › Langue · Language**.
 
 ## Compiler
 

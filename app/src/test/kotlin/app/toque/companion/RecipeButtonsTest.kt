@@ -31,7 +31,7 @@ import org.robolectric.annotation.Config
 
 /**
  * Les boutons de ce lot sur les écrans : « Arrêter la recette » et sa confirmation (le Stop rouge
- * reste en un appui), l'étoile des favoris (fiche, cartes), « Partager la liste de courses », les
+ * reste en un appui), l'étoile des favoris (fiche, cartes), « Ajouter à la liste », « Partager les ingrédients », les
  * cartes du journal qui ouvrent leur recette.
  */
 @RunWith(RobolectricTestRunner::class)
@@ -53,6 +53,7 @@ class RecipeButtonsTest {
             override fun openRecipe(id: String) { calls += "open $id" }
             override fun setFavorite(id: String, favorite: Boolean) { calls += "favorite $id $favorite" }
             override fun shareIngredients(id: String) { calls += "share $id" }
+            override fun addToList(id: String) { calls += "list $id" }
         }, journalActions = object : JournalActions {
             override fun openRecipe(recipeId: String) { calls += "journal $recipeId" }
         })
@@ -115,11 +116,13 @@ class RecipeButtonsTest {
         screens.fiche.render(Samples.fiche().copy(canFavorite = true, favorite = false))
         assertTrue(all(v).first { it.visibleUp() && it.contentDescription == "Ajouter aux favoris" }.performClick())
         assertFalse(all(v).any { it.visibleUp() && it.contentDescription == "Favori sur le robot" })
-        click(v, "Partager la liste de courses")
-        assertEquals(listOf("favorite perso-1 false", "favorite perso-1 true", "share perso-1"), calls)
-        // Onglet Étapes : pas de partage.
+        click(v, "Partager les ingrédients")
+        click(v, "Ajouter à la liste")
+        assertEquals(listOf("favorite perso-1 false", "favorite perso-1 true", "share perso-1", "list perso-1"), calls)
+        // Onglet Étapes : ni partage ni liste.
         click(v, "Étapes")
-        assertFalse(shown(v, "Partager la liste de courses"))
+        assertFalse(shown(v, "Partager les ingrédients"))
+        assertFalse(shown(v, "Ajouter à la liste"))
 
         // Cartes du catalogue.
         calls.clear()

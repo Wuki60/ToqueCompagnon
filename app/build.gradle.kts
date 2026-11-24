@@ -19,15 +19,6 @@ val robolectricJars = tasks.register<Sync>("robolectricJars") {
     into(robolectricDeps)
 }
 
-// Signature : aucune clé dans ce dépôt (le .gitignore exclut *.p12, *.jks, *.keystore). Les builds
-// debug prennent la clé de debug d'Android. Un build release n'est signé que si les quatre propriétés
-// Gradle toqueKeystore, toqueKeystorePassword, toqueKeyAlias et toqueKeyPassword sont données
-// (-P… ou ~/.gradle/gradle.properties) ; sinon l'APK release reste non signé.
-val releaseKey = listOf("toqueKeystore", "toqueKeystorePassword", "toqueKeyAlias", "toqueKeyPassword")
-    .map { (findProperty(it) as String?)?.takeIf(String::isNotBlank) }
-    .takeIf { values -> values.all { it != null } }
-    ?.map { it!! }
-
 android {
     namespace = "app.toque.companion"
     compileSdk = 34
@@ -36,25 +27,30 @@ android {
         applicationId = "app.toque.companion"
         minSdk = 26
         targetSdk = 34
-        versionCode = 14
-        versionName = "0.4.1"
+        versionCode = 15
+        versionName = "0.5.0"
     }
 
     signingConfigs {
-        if (releaseKey != null) {
-            create("release") {
-                storeFile = file(releaseKey[0])
-                storePassword = releaseKey[1]
-                keyAlias = releaseKey[2]
-                keyPassword = releaseKey[3]
-            }
+        // Clé publique exprès, la même que Toque (app/signature/toque.p12 du dépôt de Toque) : toutes les
+        // compilations (PC, contributeurs) portent la même signature, donc chaque mise à jour, téléchargée
+        // depuis l'appli ou à la main, s'installe par-dessus la précédente.
+        create("toque") {
+            storeFile = file("signature/toque.p12")
+            storeType = "PKCS12"
+            storePassword = "toque-public"
+            keyAlias = "toque"
+            keyPassword = "toque-public"
         }
     }
 
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("toque")
+        }
         release {
             isMinifyEnabled = false
-            if (releaseKey != null) signingConfig = signingConfigs.getByName("release")
+            signingConfig = signingConfigs.getByName("toque")
         }
     }
 

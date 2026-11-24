@@ -13,6 +13,8 @@ captures/
 *.keystore
 *.jks
 *.p12
+# Clé publique du projet (comme Toque) : la seule à garder.
+!app/signature/toque.p12
 # Système
 .DS_Store
 Thumbs.db
