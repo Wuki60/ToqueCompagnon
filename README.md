@@ -87,7 +87,7 @@ The app is translated **with the same system as Toque**: texts are written in Fr
 
 ## Contributing
 
-- A bug or an idea for the phone app: [open an issue here](https://github.com/Wuki60/ToqueCompagnon/issues/new/choose).
+- A bug or an idea for the phone app: [open an issue here](https://github.com/Wuki60/ToqueCompagnon/issues/new).
 - A problem with the robot itself: on the [Toque repository](https://github.com/Wuki60/MrCuisineVibeConnect/issues).
 - The code must stay **light** (no dependency without a good reason, as little network and battery as
   possible) and **never get around a robot safety rule**. Every contribution is reviewed.

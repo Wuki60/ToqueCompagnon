@@ -89,7 +89,7 @@ L'appli se traduit **avec le même système que Toque** : les textes sont écrit
 
 ## Contribuer
 
-- Un bug ou une idée pour l'appli du téléphone : [ouvrez une issue ici](https://github.com/Wuki60/ToqueCompagnon/issues/new/choose).
+- Un bug ou une idée pour l'appli du téléphone : [ouvrez une issue ici](https://github.com/Wuki60/ToqueCompagnon/issues/new).
 - Un problème sur le robot lui-même : sur le [dépôt de Toque](https://github.com/Wuki60/MrCuisineVibeConnect/issues).
 - Le code doit rester **léger** (aucune dépendance sans bonne raison, le moins de réseau et de batterie
   possible) et **ne jamais contourner une règle de sécurité** du robot. Chaque contribution est relue.
