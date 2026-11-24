@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Petite icône des notifications : la toque de l'icône, blanche (Android ne garde que la forme). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M36,64 L36,52 C26,50 22,40 28,33 C33,27 41,28 44,32 C46,24 62,24 64,32 C67,28 75,27 80,33 C86,40 82,50 72,52 L72,64 Z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M36,68 L72,68 L72,78 C72,80 70,82 68,82 L40,82 C38,82 36,80 36,78 Z" />
+</vector>

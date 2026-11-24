@@ -87,6 +87,14 @@ L'appli se traduit **avec le même système que Toque** : les textes sont écrit
   français), mais aucun texte inconnu et les mêmes `%s` / `%d`. Un test le vérifie.
 - Langues disponibles : français, anglais, allemand, espagnol, catalan et ukrainien, comme Toque.
 
+## Compiler
+
+- Il faut le JDK 17 et le SDK Android avec la plateforme 34.
+- APK de debug : `./gradlew :app:assembleDebug`. Tests : `./gradlew :app:testDebugUnitTest`.
+- Pas de robot sous la main ? `./gradlew :core:companionDemo -PdemoArgs="--lan"` lance un robot de démo sur le PC :
+  une base moteur simulée et 12 recettes inventées. Tapez `help` dans sa console pour jouer le robot (`pair` affiche le code d'appairage).
+- `core/` est une copie du dossier `core/` de Toque, modifiée dans le dépôt de Toque (voir [core/README.md](core/README.md)).
+
 ## Contribuer
 
 - Un bug ou une idée pour l'appli du téléphone : [ouvrez une issue ici](https://github.com/Wuki60/ToqueCompagnon/issues/new).

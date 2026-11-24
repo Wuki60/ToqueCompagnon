@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Thème sombre : le fond de la maquette (#0A1322), jusque sous les barres d'état et de navigation. -->
+    <style name="Companion" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/bg</item>
+        <item name="android:colorBackground">@color/bg</item>
+        <item name="android:statusBarColor">@color/bg</item>
+        <item name="android:navigationBarColor">@color/bg</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <!-- Android 8.1+ ; ignoré sur Android 8.0. -->
+        <item name="android:windowLightNavigationBar" tools:targetApi="27">false</item>
+        <item name="android:colorAccent">@color/accent</item>
+    </style>
+    <color name="bg">#FF0A1322</color>
+    <color name="accent">#FFFF8A3D</color>
+</resources>

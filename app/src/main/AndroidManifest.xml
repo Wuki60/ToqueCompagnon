@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Suivi du robot sur le Wi-Fi de la maison. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Alertes (Android 13+ : demandée à l'utilisateur). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Suivi permanent en arrière-plan tant qu'un robot est appairé (service de premier plan, type dataSync sous Android 14). -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <!-- Téléphone verrouillé : processeur et Wi-Fi éveillés pendant une cuisson, et un instant à chaque réponse du robot. -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- Reprendre le suivi au démarrage du téléphone. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Bouton « Autoriser » de l'écran Robot : la demande d'Android pour ne plus limiter l'appli en arrière-plan. -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
+    <!-- Appairage : lecture du QR code affiché par le robot. Sans appareil photo, le code à 6 chiffres suffit. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+
+    <application
+        android:name=".CompanionApp"
+        android:allowBackup="false"
+        android:fullBackupContent="@xml/backup_rules"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:icon="@drawable/ic_launcher"
+        android:label="Toque Compagnon"
+        android:supportsRtl="false"
+        android:usesCleartextTraffic="true"
+        android:theme="@style/Companion">
+
+        <activity
+            android:name=".CompanionActivity"
+            android:configChanges="keyboard|keyboardHidden|navigation|screenLayout|smallestScreenSize|layoutDirection|uiMode"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize|stateHidden">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Suivi permanent ; relancé par le système s'il l'arrête (sticky). -->
+        <service
+            android:name=".alerts.FollowService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
+        <!-- Démarrage du téléphone et mise à jour de l'appli : Android permet d'y démarrer le service. -->
+        <receiver
+            android:name=".alerts.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Boutons « Pause », « Reprendre », « +1 min » de la notification de la cuisson (intention explicite de l'appli seule). -->
+        <receiver
+            android:name=".alerts.NoticeActionReceiver"
+            android:exported="false" />
+
+        <!-- Alarme inexacte de réveil du suivi (intention explicite de l'appli seule). -->
+        <receiver
+            android:name=".alerts.WakeAlarm$AlarmReceiver"
+            android:exported="false" />
+    </application>
+</manifest>

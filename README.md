@@ -85,6 +85,14 @@ The app is translated **with the same system as Toque**: texts are written in Fr
   unknown text and the same `%s` / `%d`. A test checks it.
 - Available in French, English, German, Spanish, Catalan and Ukrainian, like Toque.
 
+## Building
+
+- You need JDK 17 and the Android SDK with platform 34.
+- Debug APK: `./gradlew :app:assembleDebug`. Tests: `./gradlew :app:testDebugUnitTest`.
+- No robot at hand? `./gradlew :core:companionDemo -PdemoArgs="--lan"` starts a demo robot on the PC: a
+  simulated motor base and 12 invented recipes. Type `help` in its console to play the robot (`pair` shows the pairing code).
+- `core/` is a copy of Toque's `core/` folder and is edited in the Toque repository (see [core/README.md](core/README.md)).
+
 ## Contributing
 
 - A bug or an idea for the phone app: [open an issue here](https://github.com/Wuki60/ToqueCompagnon/issues/new).
