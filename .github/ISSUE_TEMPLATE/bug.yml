@@ -1,0 +1,35 @@
+name: "🐞 Bug / Problème"
+description: "Something does not work in the app · Quelque chose ne marche pas dans l'appli"
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Write in French or English. · Écrivez en français ou en anglais.
+        A problem on the robot itself? Please report it on the [Toque repository](https://github.com/Wuki60/MrCuisineVibeConnect/issues). · Un problème sur le robot lui-même ? Signalez-le sur le [dépôt de Toque](https://github.com/Wuki60/MrCuisineVibeConnect/issues).
+  - type: textarea
+    id: what
+    attributes:
+      label: "What happens? · Que se passe-t-il ?"
+      description: "What you did, what you expected, what happened instead. · Ce que vous avez fait, ce que vous attendiez, ce qui s'est passé."
+    validations:
+      required: true
+  - type: input
+    id: app
+    attributes:
+      label: "Companion version · Version du Compagnon"
+      placeholder: "0.1.0"
+  - type: input
+    id: device
+    attributes:
+      label: "Phone or tablet, Android version · Téléphone ou tablette, version d'Android"
+      placeholder: "Pixel 7, Android 15"
+  - type: input
+    id: robot
+    attributes:
+      label: "Robot and Toque version · Robot et version de Toque"
+      placeholder: "SKMC 1200 C3, Toque 0.9.0"
+  - type: textarea
+    id: more
+    attributes:
+      label: "Screenshots, anything else · Captures, autre chose"

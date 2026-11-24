@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: "🤖 Toque on the robot · Toque sur le robot"
+    url: https://github.com/Wuki60/MrCuisineVibeConnect/issues
+    about: "Install, motor, recipes on the robot · Installation, moteur, recettes sur le robot"
+  - name: "🌐 toqueapp.org"
+    url: https://toqueapp.org/contact.php
+    about: "The community site · Le site communautaire"

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 400" width="1280" height="400" role="img" aria-label="Toque Compagnon">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#16294A"/>
+      <stop offset="0.55" stop-color="#0D1A31"/>
+      <stop offset="1" stop-color="#070E1B"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="400" rx="28" fill="url(#bg)"/>
+  <g transform="translate(78 0)">
+
+  <!-- Robot : disque sombre et toque orange (icône de Toque) -->
+  <g transform="translate(120 90) scale(2.04)">
+    <circle cx="54" cy="54" r="50" fill="#131D2E" stroke="#2A3A55" stroke-width="1.2"/>
+    <path fill="#FF8A3D" d="M36,64 L36,52 C26,50 22,40 28,33 C33,27 41,28 44,32 C46,24 62,24 64,32 C67,28 75,27 80,33 C86,40 82,50 72,52 L72,64 Z"/>
+    <path fill="#FF8A3D" d="M36,68 L72,68 L72,78 C72,80 70,82 68,82 L40,82 C38,82 36,80 36,78 Z"/>
+  </g>
+
+  <!-- Liaison Wi-Fi : trois points -->
+  <g fill="#FF8A3D">
+    <circle cx="386" cy="200" r="7" opacity="0.45"/>
+    <circle cx="420" cy="200" r="7" opacity="0.7"/>
+    <circle cx="454" cy="200" r="7"/>
+  </g>
+
+  <!-- Téléphone : carte arrondie, barre machine et pastilles -->
+  <g transform="translate(492 78)">
+    <rect width="140" height="244" rx="24" fill="#131D2E" stroke="#2A3A55" stroke-width="2"/>
+    <rect x="52" y="12" width="36" height="6" rx="3" fill="#2A3A55"/>
+    <circle cx="70" cy="96" r="38" fill="none" stroke="#223048" stroke-width="7"/>
+    <path d="M70 58 A38 38 0 0 1 106 108" fill="none" stroke="#FF8A3D" stroke-width="7" stroke-linecap="round"/>
+    <rect x="18" y="152" width="104" height="14" rx="7" fill="#1A2639"/>
+    <rect x="18" y="174" width="70" height="14" rx="7" fill="#1A2639"/>
+    <rect x="18" y="204" width="48" height="24" rx="12" fill="#FF8A3D"/>
+    <rect x="74" y="204" width="48" height="24" rx="12" fill="#223048"/>
+  </g>
+
+  <text x="700" y="196" fill="#F3F5F9" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="74" font-weight="300">Toque</text>
+  <text x="700" y="268" fill="#FF8A3D" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="56" font-weight="500">Compagnon</text>
+  </g>
+</svg>
