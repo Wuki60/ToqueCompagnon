@@ -38,7 +38,7 @@ data class MainState(
     /** Réglages de l'étape, voir [Fmt.cooking] : « 20 min · 100 °C · vitesse 1 ». */
     val settings: String,
     /** Température mesurée dans le bol. */
-    val tempC: Int,
+    val tempC: Int?,
     /** Consigne, null sans chauffe. */
     val targetC: Int?,
     val speed: Int,
@@ -143,7 +143,7 @@ class MainScreen(c: Context, private val actions: LiveActions, private val nav: 
         Ui.show(action, s.action.isNotEmpty())
         Ui.set(settings.label, s.settings)
         Ui.show(settings, s.settings.isNotEmpty())
-        temp.set("${s.tempC}°", Ui.tempColor(s.tempC), if (s.targetC != null) tr("vers %d °C", s.targetC) else tr("sans chauffe"))
+        temp.set(Fmt.bowl(s.tempC), Ui.bowlColor(s.tempC), if (s.targetC != null) tr("vers %d °C", s.targetC) else tr("sans chauffe"))
         speed.set("${s.speed}", Ui.TEXT, Fmt.speedName(s.speed))
         if (s.lidClosed) lid.set(tr("Fermé"), Ui.TEXT, if (s.lidLocked) tr("verrouillé") else null)
         else lid.set(tr("Ouvert"), Ui.WARN, null)

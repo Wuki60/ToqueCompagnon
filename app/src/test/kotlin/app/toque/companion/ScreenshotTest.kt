@@ -93,11 +93,14 @@ class ScreenshotTest {
         Shot("Programme", Route.PROGRAMME),
         // Smart : un programme de l'appli d'origine en cours, et tous les programmes du Smart.
         Shot("ProgrammeSmart", Route.PROGRAMME) { s, _ ->
-            s.programme.render(Samples.programme().copy(name = "Smoothie", bowlC = 22, remainingMs = 40_000, totalMs = 60_000,
+            // Sans chauffe, la base du Smart ne mesure pas : « — » (machine.tempKnown faux).
+            s.programme.render(Samples.programme().copy(name = "Smoothie", bowlC = null, remainingMs = 40_000, totalMs = 60_000,
                 tags = listOf("vitesse 10"), hint = "",
                 programs = app.toque.companion.live.LivePresenter.robotPrograms(app.toque.companion.ui.screens.ProgramKind.SMOOTHIE, smart = true)))
         },
         Shot("Repos", Route.REPOS),
+        // Smart au repos : température non mesurée, « — » et pourquoi.
+        Shot("ReposSmart", Route.REPOS) { s, _ -> s.repos.render(Samples.repos().copy(bowlC = null)) },
         Shot("Attente", Route.ATTENTE),
         Shot("Fin", Route.FIN),
         // Titres longs : points de suspension, rien ne déborde.
@@ -379,7 +382,7 @@ class ScreenshotTest {
     }
 
     private val WIDE_SHOTS = setOf("Repos", "Main", "Recettes", "Fiche", "FicheEtapes", "Envoyee", "Courses", "Robot", "Journal", "Appairage", "Editeur")
-    private val UK_SHOTS = setOf("ProgrammeSmart", "Repos", "Main", "Etapes", "Pesee", "Pause", "Recettes", "Fiche", "Courses", "CoursesVide", "Robot", "RobotMiseAJour",
+    private val UK_SHOTS = setOf("ProgrammeSmart", "Repos", "ReposSmart", "Main", "Etapes", "Pesee", "Pause", "Recettes", "Fiche", "Courses", "CoursesVide", "Robot", "RobotMiseAJour",
         "Journal", "Appairage", "AppairageCode", "Editeur", "Manuel", "Programme")
 
     /** Écran « En direct » avec une cuisson en cours, catalogue, fiche, onglet Robot, éditeur, programme en cours, apparence. */

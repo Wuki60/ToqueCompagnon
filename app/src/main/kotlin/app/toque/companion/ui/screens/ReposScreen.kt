@@ -22,7 +22,7 @@ import app.toque.core.i18n.tr
 /** Robot au repos (maquette « Robot au repos »). */
 data class ReposState(
     val link: Link = Link.CONNECTED,
-    val bowlC: Int,
+    val bowlC: Int?,
     val scaleG: Int,
     val lidClosed: Boolean,
     val bowlInPlace: Boolean,

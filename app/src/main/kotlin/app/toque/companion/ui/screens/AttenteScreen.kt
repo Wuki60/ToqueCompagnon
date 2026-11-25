@@ -25,7 +25,7 @@ data class AttenteState(
     val stepCount: Int,
     /** Durée totale de la recette, en secondes. */
     val durationS: Int,
-    val bowlC: Int,
+    val bowlC: Int?,
     val scaleG: Int,
     val lidClosed: Boolean,
     val bowlInPlace: Boolean,

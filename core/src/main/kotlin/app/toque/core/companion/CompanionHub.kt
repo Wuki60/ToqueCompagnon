@@ -71,8 +71,6 @@ class CompanionHub(
     private var revision = 1L
 
     // Détection des changements (voir bump).
-    private var structuralKey = ""
-    private var telemetryKey = ""
     private var telemetryDirty = false
     private var lastBumpMono = Long.MIN_VALUE / 4
     /** Révision du dernier changement qui n'est pas que de la télémesure (attente « quiet »). */
@@ -140,7 +138,7 @@ class CompanionHub(
      * Le serveur devrait écouter : au moins un téléphone appairé, ou l'écran d'appairage ouvert.
      * L'appli décide d'appeler [start] ou [stop] (après un appairage, un retrait, l'ouverture de l'écran…).
      */
-    val wanted: Boolean get() = pairing.list.isNotEmpty() || pairing.isOpen
+    val wanted: Boolean get() = pairing.hasPhones || pairing.isOpen
 
     val running: Boolean get() = server?.running == true
 
@@ -230,19 +228,10 @@ class CompanionHub(
         val seq = journal.lastSeq
         observe(prev, s)
         val now = clock.monoMs()
-        val sKey = structural(s)
-        val tKey = telemetry(s)
         var bump = false
         // Changement d'état ou nouvelle ligne du journal : réveille aussi les attentes « quiet ».
-        var structuralChange = journal.lastSeq != seq
-        if (sKey != structuralKey) {
-            structuralKey = sKey
-            structuralChange = true
-        }
-        if (tKey != telemetryKey) {
-            telemetryKey = tKey
-            telemetryDirty = true
-        }
+        val structuralChange = journal.lastSeq != seq || !sameStructure(prev, s)
+        if (!sameTelemetry(prev, s)) telemetryDirty = true
         if (telemetryDirty && now - lastBumpMono >= TELEMETRY_MIN_MS) bump = true
         // Le téléphone extrapole le temps restant : ne prévenir que s'il s'écarte de l'extrapolation.
         if (s.state == JobState.RUNNING) {
@@ -555,7 +544,8 @@ class CompanionHub(
         // Température atteinte : cuisson manuelle à une phase, ou étape de la recette guidée.
         val inSession = session != null && jobActivity != null && jobActivity === sessionActivity
         val eligible = ss != null && (inSession || (session == null && s.kind == JobKind.MANUAL && s.phaseCount == 1))
-        val reached = temperature.update(jobGeneration, eligible, ss == JobState.RUNNING, s.jobTempLevel, s.hasSample, s.actualTempC)
+        val reached = temperature.update(jobGeneration, eligible, ss == JobState.RUNNING, s.jobTempLevel,
+            s.hasSample && tempKnown(s), s.actualTempC, targetCelsius(s))
         if (reached != null) journal.add(wall, "temp_reached", tr("Température atteinte : %d °C", reached), Alerts.TEMP_REACHED,
             activityId = activityId, stepIndex = jobStep, elapsedMs = s.elapsedMs)
 
@@ -587,13 +577,24 @@ class CompanionHub(
 
     // ------------------------------------------------------------------ révision
 
-    private fun structural(s: Snapshot): String = listOf(
-        s.link, s.faultCode, s.lidOpen, s.bowlDetected, s.bowlRemoved, s.jobActive, s.jobKind, s.jobLabel,
-        s.jobState, s.pauseReason, s.endReason, s.phaseIndex, s.totalMs, s.jobSpeed, s.jobTempLevel, s.jobReverse,
-        s.accessory, s.hotBlendConfirmed, s.turboActive, s.motorOn, s.heaterOn, s.hot, s.waitingStop, s.hasSample,
-    ).joinToString("|")
+    /**
+     * Ce que le téléphone voit de l'état n'a pas changé depuis [a]. Champ par champ, sans rien allouer :
+     * appelé à chaque Snapshot (10 fois par seconde sur le Connect).
+     */
+    private fun sameStructure(a: Snapshot?, b: Snapshot): Boolean = a != null &&
+        a.link == b.link && a.faultCode == b.faultCode && a.lidOpen == b.lidOpen && a.bowlDetected == b.bowlDetected &&
+        a.bowlRemoved == b.bowlRemoved && a.jobActive == b.jobActive && a.jobKind == b.jobKind &&
+        a.jobLabel == b.jobLabel && a.jobState == b.jobState && a.pauseReason == b.pauseReason &&
+        a.endReason == b.endReason && a.phaseIndex == b.phaseIndex && a.totalMs == b.totalMs &&
+        a.jobSpeed == b.jobSpeed && a.jobTempLevel == b.jobTempLevel && a.jobReverse == b.jobReverse &&
+        a.accessory == b.accessory && a.hotBlendConfirmed == b.hotBlendConfirmed && a.turboActive == b.turboActive &&
+        a.motorOn == b.motorOn && a.heaterOn == b.heaterOn && a.hot == b.hot && a.waitingStop == b.waitingStop &&
+        a.hasSample == b.hasSample
 
-    private fun telemetry(s: Snapshot): String = "${s.actualTempC}|${s.targetTempC}|${s.weightG}|${s.scaleStable}"
+    /** Température et poids inchangés depuis [a]. */
+    private fun sameTelemetry(a: Snapshot?, b: Snapshot): Boolean = a != null &&
+        a.actualTempC == b.actualTempC && a.targetTempC == b.targetTempC && a.weightG == b.weightG &&
+        a.scaleStable == b.scaleStable
 
     /** Nouvelle révision ; [structural] faux : télémesure seule (température, poids), sans réveiller une attente « quiet ». */
     private fun bumpLocked(structural: Boolean = true) {
@@ -1121,7 +1122,26 @@ class CompanionHub(
 
     internal fun robotWire(): RobotWire = synchronized(lock) {
         RobotWire(pairing.robotId, robot.name, robot.appVersion, robot.language,
-            accent = RobotWire.accent(robot.accent), theme = RobotWire.theme(robot.theme), anyAccent = anyAccent())
+            accent = RobotWire.accent(robot.accent), theme = RobotWire.theme(robot.theme), anyAccent = anyAccent(),
+            model = RobotProfiles.active.id)
+    }
+
+    /**
+     * La base mesure la température en ce moment : toujours sur le Connect ; sur le Smart, seulement en
+     * chauffant ou pendant une cuisson chauffée (sa base ne mesure qu'après une chauffe).
+     */
+    private fun tempKnown(s: Snapshot): Boolean =
+        RobotProfiles.active.capabilities.measuresTemperature || s.heaterOn || (s.jobActive && s.jobTempLevel > 0)
+
+    /**
+     * Consigne en °C de la cuisson : celle que la base renvoie quand elle n'est pas dans la table de
+     * Toque mais tombe sur le niveau de la cuisson (40 °C du Smart, niveau 37 °C), sinon celle du niveau.
+     */
+    private fun targetCelsius(s: Snapshot): Int {
+        val level = s.jobTempLevel
+        val board = s.targetTempC
+        return if (level > 0 && board > 0 && Mcc.levelForCelsius(board) <= 0 && Mcc.levelAtMost(board) == level) board
+        else Mcc.celsiusForLevel(level)
     }
 
     /** `robot.anyAccent` : le robot change sa couleur depuis un téléphone, et en prend toute couleur gardée. */
@@ -1133,7 +1153,7 @@ class CompanionHub(
         val wall = clock.wallMs()
         val machine = MachineWire(s.link.name, s.link.label, s.ready, s.faultCode, s.faultMessage, s.hasSample,
             s.actualTempC, s.targetTempC, s.hot, s.weightG, s.scaleStable, s.lidOpen, s.bowlDetected, s.bowlRemoved,
-            s.motorOn, s.heaterOn, s.turboActive)
+            s.motorOn, s.heaterOn, s.turboActive, tempKnown(s))
         val job = if (!s.jobActive) null else {
             val pause = if (s.state != JobState.PAUSED) null else {
                 val autoAt = if (pauseSinceWall > 0) pauseSinceWall + pauseMaxMs else 0L
@@ -1154,9 +1174,7 @@ class CompanionHub(
             WaitingWire(w.recipeId, w.title, w.stepCount, w.totalMinutes, w.servings, w.category, w.user, w.hasImage,
                 w.sentAt, w.sender.wire(phone.id))
         }
-        StateWire(COMPANION_PROTOCOL, revision, wall, RobotWire(pairing.robotId, robot.name, robot.appVersion, robot.language,
-            accent = RobotWire.accent(robot.accent), theme = RobotWire.theme(robot.theme), anyAccent = anyAccent()),
-            PhoneWire.of(phone), machine, job, permissionsLocked(), sess, wait, journal.lastEnded()?.wire(phone.id),
+        StateWire(COMPANION_PROTOCOL, revision, wall, robotWire(), PhoneWire.of(phone), machine, job, permissionsLocked(), sess, wait, journal.lastEnded()?.wire(phone.id),
             journal.lastSeq, limitsFor(RobotProfiles.active))
     }
 

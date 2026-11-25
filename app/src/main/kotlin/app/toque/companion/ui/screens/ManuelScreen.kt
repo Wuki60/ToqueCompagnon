@@ -32,7 +32,7 @@ data class ManuelState(
     /** Heure de lancement sur le robot : « 11:48 », vide si inconnue (ligne cachée). */
     val startedAt: String,
     /** Température mesurée dans le bol. */
-    val bowlC: Int,
+    val bowlC: Int?,
     val remainingMs: Long,
     val totalMs: Long,
     /** Consigne de température, 0 sans chauffe. */
@@ -153,8 +153,8 @@ class ManuelScreen(c: Context, private val actions: LiveActions, private val nav
         Ui.show(hint, p && s.hint.isNotEmpty())
         Ui.show(started, s.startedAt.isNotEmpty())
         if (s.startedAt.isNotEmpty()) Ui.set(started, tr("lancée sur le robot à %s", s.startedAt))
-        Ui.set(bowl, "${s.bowlC}°")
-        Ui.setColor(bowl, Ui.tempColor(s.bowlC))
+        Ui.set(bowl, Fmt.bowl(s.bowlC))
+        Ui.setColor(bowl, Ui.bowlColor(s.bowlC))
         ring.progress = if (s.totalMs > 0) 1f - s.remainingMs.toFloat() / s.totalMs else 0f
         Ui.set(time, Ui.clock(s.remainingMs))
         Ui.set(timeSub, tr("restant sur %s", Fmt.duration((s.totalMs / 1000).toInt())))

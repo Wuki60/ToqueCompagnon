@@ -66,7 +66,7 @@ data class ProgrammeState(
     val startedAt: String,
     /** Nom du programme en cours : « Vapeur ». */
     val name: String,
-    val bowlC: Int,
+    val bowlC: Int?,
     val remainingMs: Long,
     val totalMs: Long,
     /** Réglages du programme en pastilles : « 120 °C », « Lame à l'arrêt ». */
@@ -146,8 +146,8 @@ class ProgrammeScreen(c: Context, private val actions: LiveActions, private val 
         if (s.startedAt.isNotEmpty()) Ui.set(started, tr("lancé sur le robot à %s", s.startedAt))
         Ui.setButtonEnabled(pause, s.canPause)
         Ui.setButtonEnabled(stop, s.canStop)
-        Ui.set(bowl, "${s.bowlC}°")
-        Ui.setColor(bowl, Ui.tempColor(s.bowlC))
+        Ui.set(bowl, Fmt.bowl(s.bowlC))
+        Ui.setColor(bowl, Ui.bowlColor(s.bowlC))
         ring.progress = if (s.totalMs > 0) 1f - s.remainingMs.toFloat() / s.totalMs else 0f
         Ui.set(name, s.name)
         Ui.set(time, Ui.clock(s.remainingMs))

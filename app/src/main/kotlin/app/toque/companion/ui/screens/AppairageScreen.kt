@@ -175,7 +175,7 @@ class AppairageScreen(c: Context, private val actions: PairingActions, private v
 
         val steps = Ui.card(c)
         Ui.pad(steps, 16, 16, 16, 16)
-        steps.addView(numbered(1, tr("Sur le robot : Réglages, Compagnon, puis Appairer un téléphone.")))
+        steps.addView(numbered(1, tr("Sur le robot : Réglages, Téléphone, puis Appairer un téléphone.")))
         steps.addView(numbered(2, tr("Scannez le QR code qui s'affiche sur son écran.")), Ui.lp(t = 12))
         column.addView(steps, Ui.lp(l = 20, t = 16, r = 20))
         column.addView(Ui.spacer(c, h = 12))
@@ -199,7 +199,7 @@ class AppairageScreen(c: Context, private val actions: PairingActions, private v
         Ui.show(bar.subtitle, false)
         // Barre fixée en haut ; les explications et les cases défilent dessous.
         root.addView(bar)
-        column.addView(Ui.text(c, tr("Sur le robot : Réglages, Compagnon, puis Appairer un téléphone. Le code s'affiche sous le QR code et reste valable 2 minutes."),
+        column.addView(Ui.text(c, tr("Sur le robot : Réglages, Téléphone, puis Appairer un téléphone. Le code s'affiche sous le QR code et reste valable 2 minutes."),
             15f, Ui.TEXT2, lineHeight = 21f), Ui.lp(l = 20, t = 10, r = 20))
 
         // Six cases dessinées ; un champ invisible par-dessus reçoit le clavier numérique.

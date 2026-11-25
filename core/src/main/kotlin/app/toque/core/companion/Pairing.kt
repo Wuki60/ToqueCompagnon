@@ -160,6 +160,9 @@ class PairingManager(
 
     val list: List<Phone> get() = synchronized(lock) { ArrayList(phones) }
 
+    /** Au moins un téléphone appairé (sans copier la liste : lu à chaque Snapshot). */
+    val hasPhones: Boolean get() = synchronized(lock) { phones.isNotEmpty() }
+
     fun remove(id: String): Boolean {
         val removed = synchronized(lock) {
             val ok = phones.removeAll { it.id == id }

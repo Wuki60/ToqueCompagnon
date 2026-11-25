@@ -1,7 +1,7 @@
 # core
 
 This folder is a copy of `core/` from [Toque](https://github.com/Wuki60/MrCuisineVibeConnect) at
-commit `2280f9e2239ac0bbb3b0db409124976628edf582` (pull request [#97](https://github.com/Wuki60/MrCuisineVibeConnect/pull/97)). It holds the pure Kotlin code shared with the robot app: the link protocol,
+commit `f1865f88d9d44edd2654df84409211a5dba5359b` (Toque 0.10.0). It holds the pure Kotlin code shared with the robot app: the link protocol,
 the safety rules, the recipes, the translations helper. `src/demo` is the demo robot that runs on a PC.
 
 - It is edited in the Toque repository, never here.

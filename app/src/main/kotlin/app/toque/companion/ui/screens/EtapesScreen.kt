@@ -314,11 +314,9 @@ class EtapesScreen(c: Context, private val actions: LiveActions, private val nav
                     t.setSpan(RelativeSizeSpan(22f / 15f), 0, t.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                     t.append(" ").append(tr("restant"))
                     remaining.text = t
-                    Ui.show(temp, p.tempC != null)
-                    if (p.tempC != null) {
-                        Ui.set(temp, tr("%d °C", p.tempC))
-                        Ui.setColor(temp, Ui.tempColor(p.tempC))
-                    }
+                    // Température du bol ; « — » quand la base ne la mesure pas (Smart hors chauffe).
+                    Ui.set(temp, if (p.tempC != null) tr("%d °C", p.tempC) else "—")
+                    Ui.setColor(temp, Ui.bowlColor(p.tempC))
                 }
             } else {
                 val done = s.status == StepStatus.DONE

@@ -98,16 +98,22 @@ data class RobotWire(
      * ancien (champ absent) : le téléphone ne lui propose que les dix.
      */
     val anyAccent: Boolean = false,
+    /**
+     * Modèle du robot : l'identifiant de sa fiche ([app.toque.core.robot.RobotProfile.id]), « mc-connect »
+     * ou « mc-smart » ; vide : inconnu (robot plus ancien, le téléphone le déduit de `limits`).
+     */
+    val model: String = "",
 ) {
     /**
-     * [accent] et [theme] ne sont écrits que s'ils sont connus, [anyAccent] que s'il est vrai : un robot
-     * plus ancien garde exactement son JSON.
+     * [accent], [theme] et [model] ne sont écrits que s'ils sont connus, [anyAccent] que s'il est vrai : un
+     * robot plus ancien garde exactement son JSON.
      */
     fun toMap(): Map<String, Any?> = linkedMapOf<String, Any?>("id" to id, "name" to name, "appVersion" to appVersion,
         "language" to language, "protocol" to protocol).apply {
         if (accent.isNotEmpty()) put("accent", accent)
         if (theme.isNotEmpty()) put("theme", theme)
         if (anyAccent) put("anyAccent", true)
+        if (model.isNotEmpty()) put("model", model)
     }
 
     /** Le robot prendrait [color] (« #RRGGBB ») envoyée par POST /api/robot/appearance. */
@@ -130,7 +136,7 @@ data class RobotWire(
 
         fun fromMap(m: Map<String, Any?>) = RobotWire(W.s(m, "id"), W.s(m, "name"), W.s(m, "appVersion"),
             W.s(m, "language").ifEmpty { "fr" }, W.i(m, "protocol"), accent(W.s(m, "accent")), theme(W.s(m, "theme")),
-            m["anyAccent"] == true)
+            m["anyAccent"] == true, W.s(m, "model"))
     }
 }
 
@@ -196,18 +202,27 @@ data class MachineWire(
     val motorOn: Boolean = false,
     val heaterOn: Boolean = false,
     val turbo: Boolean = false,
+    /**
+     * La base mesure la température en ce moment. Faux sur le Smart hors chauffe (sa base ne mesure
+     * qu'en chauffant) : [tempC] n'est alors pas une mesure, le téléphone ne l'affiche pas. Toujours vrai
+     * sur le Connect. À lire avec [hasSample]. Écrit seulement quand il est faux : absent = vrai.
+     */
+    val tempKnown: Boolean = true,
 ) {
-    fun toMap(): Map<String, Any?> = linkedMapOf("link" to link, "linkLabel" to linkLabel, "ready" to ready,
+    fun toMap(): Map<String, Any?> = linkedMapOf<String, Any?>("link" to link, "linkLabel" to linkLabel, "ready" to ready,
         "faultCode" to faultCode, "faultMessage" to faultMessage, "hasSample" to hasSample, "tempC" to tempC,
         "targetTempC" to targetTempC, "hot" to hot, "weightG" to weightG, "scaleStable" to scaleStable,
         "lidOpen" to lidOpen, "bowlDetected" to bowlDetected, "bowlRemoved" to bowlRemoved,
-        "motorOn" to motorOn, "heaterOn" to heaterOn, "turbo" to turbo)
+        "motorOn" to motorOn, "heaterOn" to heaterOn, "turbo" to turbo).apply {
+        if (!tempKnown) put("tempKnown", false)
+    }
 
     companion object {
         fun fromMap(m: Map<String, Any?>) = MachineWire(W.s(m, "link").ifEmpty { "OFFLINE" }, W.s(m, "linkLabel"),
             W.b(m, "ready"), W.s(m, "faultCode"), W.s(m, "faultMessage"), W.b(m, "hasSample"), W.i(m, "tempC"),
             W.i(m, "targetTempC"), W.b(m, "hot"), W.i(m, "weightG"), W.b(m, "scaleStable"), W.b(m, "lidOpen"),
-            W.b(m, "bowlDetected"), W.b(m, "bowlRemoved"), W.b(m, "motorOn"), W.b(m, "heaterOn"), W.b(m, "turbo"))
+            W.b(m, "bowlDetected"), W.b(m, "bowlRemoved"), W.b(m, "motorOn"), W.b(m, "heaterOn"), W.b(m, "turbo"),
+            m["tempKnown"] as? Boolean ?: true)
     }
 }
 

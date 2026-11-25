@@ -13,6 +13,7 @@ import app.toque.companion.WireFixtures.steps
 import app.toque.companion.WireFixtures.yes
 import app.toque.companion.link.LinkPhase
 import app.toque.companion.link.LinkStatus
+import app.toque.companion.ui.Fmt
 import app.toque.companion.ui.Link
 import app.toque.companion.ui.Route
 import app.toque.companion.ui.StepStatus
@@ -403,7 +404,7 @@ class LivePresenterTest {
     /** Smart : un programme de l'appli d'origine (Smoothie) est reconnu, et la liste montre les programmes du Smart. */
     @Test fun smartProgramIsProgramme() {
         val j = job(kind = "PROGRAM", label = "Smoothie", kindLabel = "Programme", remainingMs = 40_000, totalMs = 60_000, speed = 10, tempC = 0)
-        val s = state(job = j).copy(robot = state().robot.copy(name = "Monsieur Cuisine Smart"),
+        val s = state(job = j).copy(robot = state().robot.copy(name = "Monsieur Cuisine Smart", model = "mc-smart"),
             limits = app.toque.companion.WireFixtures.limits.copy(heatNoStir = false))
         val v = present(input(s))
         assertEquals(Route.PROGRAMME, v.route)
@@ -416,6 +417,54 @@ class LivePresenterTest {
         // Le Connect garde ses quatre programmes.
         val c = present(input(state(job = job(kind = "STEAM", label = "Vapeur", kindLabel = "Vapeur", totalMs = 1_200_000))))
         assertEquals(4, (c.screen as ProgrammeState).programs.size)
+    }
+
+    /** Le Smart est reconnu à robot.model seul (Toque 0.10.0) : plus par son nom ni par ses limites. */
+    @Test fun smartIsKnownByModelOnly() {
+        val connect = state()
+        assertEquals("mc-connect", connect.robot.model)
+        assertFalse(LivePresenter.isSmart(connect))
+        // « mc-smart » passe par le JSON du fil.
+        val smart = WireFixtures.wire(connect.copy(robot = connect.robot.copy(model = "mc-smart")))
+        assertEquals("mc-smart", smart.robot.model)
+        assertTrue(LivePresenter.isSmart(smart))
+        // Un nom ou des limites qui ressemblent au Smart ne suffisent plus : c'est un Connect.
+        val lookalike = connect.copy(robot = connect.robot.copy(name = "Monsieur Cuisine Smart"),
+            limits = WireFixtures.limits.copy(heatNoStir = false))
+        assertFalse(LivePresenter.isSmart(lookalike))
+        val steam = job(kind = "STEAM", label = "Vapeur", kindLabel = "Vapeur", totalMs = 1_200_000)
+        assertEquals(4, (present(input(lookalike.copy(job = steam))).screen as ProgrammeState).programs.size)
+        assertEquals(ProgramKind.values().size, (present(input(smart.copy(job = steam))).screen as ProgrammeState).programs.size)
+    }
+
+    /**
+     * Smart hors chauffe (machine.tempKnown faux) : sa base ne mesure pas, la température du bol n'est
+     * montrée nulle part (« — »). Le drapeau hot reste celui du robot.
+     */
+    @Test fun unknownBowlTemperatureIsNotShown() {
+        val unknown = ready.copy(tempC = 48, tempKnown = false)
+        // Le faux passe par le JSON ; absent = vrai.
+        assertFalse(state(machine = unknown).machine.tempKnown)
+        assertTrue(state().machine.tempKnown)
+        assertNull((present(input(state(machine = unknown))).screen as ReposState).bowlC)
+        assertEquals(48, (present(input(state(machine = unknown.copy(tempKnown = true)))).screen as ReposState).bowlC)
+        val w = WaitingWire("web-1", "Soupe", stepCount = 3, totalMinutes = 20, sentAt = T - 60_000)
+        assertNull((present(input(state(machine = unknown, waiting = w))).screen as AttenteState).bowlC)
+        // Programme sans chauffe, cuisson manuelle, fin (encore chaude), étape de recette.
+        val smoothie = job(kind = "PROGRAM", label = "Smoothie", kindLabel = "Programme", speed = 10, tempC = 0)
+        assertNull((present(input(state(job = smoothie, machine = unknown))).screen as ProgrammeState).bowlC)
+        assertNull((present(input(state(job = job(tempC = 0), machine = unknown))).screen as ManuelState).bowlC)
+        val end = job(state = "ABORTED", endReason = "Arrêté", tempC = 0)
+        val f = present(input(state(job = end, machine = unknown.copy(hot = true)))).screen as FinState
+        assertNull(f.bowlC)
+        assertTrue(f.hot)
+        val v = present(input(state(job = job(tempC = 0), session = session(4, "nothing", running = listOf(4)), machine = unknown)))
+        assertNull((v.screen as MainState).tempC)
+        assertNull(v.etapes!!.steps[4].progress!!.tempC)
+        // Affichage : « — », sans note de température trompeuse.
+        assertEquals("—", Fmt.bowl(null))
+        assertEquals("64°", Fmt.bowl(64))
+        assertEquals("mesurée en chauffant", Fmt.bowlNote(null))
     }
 
     @Test fun programIsProgramme() {

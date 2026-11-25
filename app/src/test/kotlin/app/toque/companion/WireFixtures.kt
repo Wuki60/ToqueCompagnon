@@ -93,7 +93,7 @@ object WireFixtures {
 
     fun state(machine: MachineWire = ready, job: JobWire? = null, session: SessionWire? = null, can: Permissions? = null,
               waiting: WaitingWire? = null, last: ActivityWire? = null, journalSeq: Long = 17, revision: Long = 42) = wire(
-        StateWire(revision = revision, serverTime = T, robot = RobotWire("a1b2c3d4e5f6", "Monsieur Cuisine Connect", "0.7.0", "fr"),
+        StateWire(revision = revision, serverTime = T, robot = RobotWire("a1b2c3d4e5f6", "Monsieur Cuisine Connect", "0.10.0", "fr", model = "mc-connect"),
             machine = machine, job = job, can = can ?: can(job, waiting = waiting != null, recipe = session != null), session = session, waiting = waiting,
             last = last, journalSeq = journalSeq, limits = limits))
 

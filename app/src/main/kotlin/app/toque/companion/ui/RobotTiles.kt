@@ -23,8 +23,9 @@ class RobotTiles(c: Context, onTare: () -> Unit) : LinearLayout(c) {
         addView(tileRow(c, lid, bowl), Ui.lp(t = 10))
     }
 
-    fun set(bowlC: Int, scaleG: Int, lidClosed: Boolean, bowlInPlace: Boolean) {
-        temp.set("$bowlC°", Ui.tempColor(bowlC), Fmt.bowlNote(bowlC))
+    /** [bowlC] null : température non mesurée en ce moment (Smart hors chauffe), affichée « — ». */
+    fun set(bowlC: Int?, scaleG: Int, lidClosed: Boolean, bowlInPlace: Boolean) {
+        temp.set(Fmt.bowl(bowlC), Ui.bowlColor(bowlC), Fmt.bowlNote(bowlC))
         scale.set(Fmt.grams(scaleG))
         lid.set(if (lidClosed) tr("Fermé") else tr("Ouvert"), if (lidClosed) Ui.TEXT else Ui.WARN)
         bowl.set(if (bowlInPlace) tr("En place") else tr("Retiré"), if (bowlInPlace) Ui.TEXT else Ui.WARN)

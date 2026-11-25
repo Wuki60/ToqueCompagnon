@@ -15,6 +15,9 @@ import app.toque.core.protocol.Mcc
  * - Température relevée en cours de route avec un bol en dessous : de nouveau armée ; abaissée sous la
  *   température du bol : plus rien à attendre (refroidissement).
  * - Capteur de cette base : 0 sous 37 °C (jamais « atteinte »), et seulement avec un relevé ([hasSample]).
+ *   Sur le Smart, l'appelant ne donne un relevé que quand la base mesure (en chauffant).
+ * - [targetC] : consigne exacte quand le niveau ne la dit pas (40 °C du Smart, niveau 37 °C) ; 0 : celle
+ *   du niveau.
  */
 class TemperatureWatch(private val toleranceC: Int = 2) {
     private var job = Long.MIN_VALUE
@@ -28,8 +31,9 @@ class TemperatureWatch(private val toleranceC: Int = 2) {
     private fun reached(actualC: Int) = target > 0 && actualC > 0 && actualC >= target - toleranceC
 
     /** Température demandée (°C) à annoncer maintenant, ou null. */
-    fun update(jobGeneration: Long, eligible: Boolean, running: Boolean, tempLevel: Int, hasSample: Boolean, actualC: Int): Int? {
-        val t = if (eligible && tempLevel > 0) Mcc.celsiusForLevel(tempLevel) else 0
+    fun update(jobGeneration: Long, eligible: Boolean, running: Boolean, tempLevel: Int, hasSample: Boolean, actualC: Int,
+               targetC: Int = 0): Int? {
+        val t = if (eligible && tempLevel > 0) (if (targetC > 0) targetC else Mcc.celsiusForLevel(tempLevel)) else 0
         if (jobGeneration != job) {
             job = jobGeneration
             target = t

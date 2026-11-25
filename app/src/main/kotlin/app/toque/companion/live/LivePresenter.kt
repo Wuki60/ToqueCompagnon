@@ -31,6 +31,7 @@ import app.toque.companion.ui.screens.StepProgress
 import app.toque.companion.ui.screens.WeighItem
 import app.toque.core.companion.ActivityWire
 import app.toque.core.companion.JobWire
+import app.toque.core.companion.MachineWire
 import app.toque.core.companion.MachineStepWire
 import app.toque.core.companion.Origin
 import app.toque.core.companion.RecipeDetail
@@ -38,6 +39,7 @@ import app.toque.core.companion.SessionWire
 import app.toque.core.companion.StateWire
 import app.toque.core.companion.StepWire
 import app.toque.core.i18n.tr
+import app.toque.core.robot.RobotProfiles
 import app.toque.core.companion.Permission
 import app.toque.core.machine.Accessory
 import app.toque.core.machine.ManualSettings
@@ -141,9 +143,9 @@ object LivePresenter {
         if (prep != null) return LiveView(Route.MANUEL, preparation(ctx, prep))
         val w = s.waiting
         if (w != null) return LiveView(Route.ATTENTE, AttenteState(link, w.title, ctx.clock(w.sentAt), w.stepCount, w.totalMinutes * 60,
-            m.tempC, m.weightG, !m.lidOpen, bowlInPlace(s), servings = w.servings))
+            bowlC(m), m.weightG, !m.lidOpen, bowlInPlace(s), servings = w.servings))
         val start = startPermission(s)
-        return LiveView(Route.REPOS, ReposState(link, m.tempC, m.weightG, !m.lidOpen, bowlInPlace(s), s.last?.let { last(ctx, it) },
+        return LiveView(Route.REPOS, ReposState(link, bowlC(m), m.weightG, !m.lidOpen, bowlInPlace(s), s.last?.let { last(ctx, it) },
             canStartManual = start.allowed && Pending.START !in i.pending, startManualReason = start.reason))
     }
 
@@ -273,7 +275,7 @@ object LivePresenter {
             remainingMs = ctx.remaining(job),
             totalMs = job.totalMs,
             settings = Fmt.cooking((job.totalMs / 1000).toInt(), job.tempC.takeIf { it > 0 }, job.speed),
-            tempC = s.machine.tempC,
+            tempC = bowlC(s.machine),
             targetC = job.tempC.takeIf { it > 0 },
             speed = job.speed,
             lidClosed = !s.machine.lidOpen,
@@ -355,7 +357,7 @@ object LivePresenter {
             }
             val progress = if (job != null && status == StepStatus.CURRENT && (i in running || running.isEmpty())) {
                 val rem = ctx.remaining(job)
-                StepProgress(if (job.totalMs > 0) 1f - rem.toFloat() / job.totalMs else 0f, rem, ctx.s.machine.tempC)
+                StepProgress(if (job.totalMs > 0) 1f - rem.toFloat() / job.totalMs else 0f, rem, bowlC(ctx.s.machine))
             } else null
             EtapeItem(st.text, detail, status, warning, progress, waiting)
         }
@@ -415,7 +417,7 @@ object LivePresenter {
         return ManuelState(
             link = ctx.link,
             startedAt = ctx.clock(job.startedAt),
-            bowlC = s.machine.tempC,
+            bowlC = bowlC(s.machine),
             remainingMs = remaining,
             totalMs = total,
             targetC = (o?.tempC ?: job.tempC.takeIf { job.tempLevel > 0 } ?: 0).coerceAtLeast(0),
@@ -453,7 +455,7 @@ object LivePresenter {
         return ManuelState(
             link = ctx.link,
             startedAt = "",
-            bowlC = m.tempC,
+            bowlC = bowlC(m),
             remainingMs = d.seconds * 1000L,
             totalMs = d.seconds * 1000L,
             targetC = if (d.tempLevel > 0) d.tempC else 0,
@@ -484,11 +486,14 @@ object LivePresenter {
         else -> ProgramKind.named(job.label) ?: ProgramKind.named(job.kindLabel)
     }
 
+    /** Le robot est un Monsieur Cuisine Smart : il le dit dans `robot.model` (Toque 0.10.0, toujours envoyé). */
+    fun isSmart(s: StateWire): Boolean = s.robot.model == RobotProfiles.MC_SMART.id
+
     /**
-     * Le robot est un Monsieur Cuisine Smart : il ne chauffe pas lame à l'arrêt (limits.heatNoStir), ou il
-     * le dit dans son nom. Un robot plus ancien, qui n'envoie pas heatNoStir, est un Connect.
+     * Température du bol à montrer, ou null (affichée « — ») : la base ne la mesure pas en ce moment
+     * (`tempKnown` faux : le Smart hors chauffe). Les contrôles de sécurité gardent `tempC` et `hot`.
      */
-    fun isSmart(s: StateWire): Boolean = !s.limits.heatNoStir || s.robot.name.contains("Smart", ignoreCase = true)
+    fun bowlC(m: MachineWire): Int? = if (m.tempKnown) m.tempC else null
 
     private fun programme(ctx: Ctx, job: JobWire): ProgrammeState {
         val s = ctx.s
@@ -501,7 +506,7 @@ object LivePresenter {
             link = ctx.link,
             startedAt = ctx.clock(job.startedAt),
             name = job.label.ifEmpty { job.kindLabel },
-            bowlC = s.machine.tempC,
+            bowlC = bowlC(s.machine),
             remainingMs = ctx.remaining(job),
             totalMs = job.totalMs,
             tags = tags,
@@ -584,7 +589,7 @@ object LivePresenter {
             detail = detail,
             settings = settings,
             progress = if (finished || job.totalMs <= 0) 1f else job.elapsedMs.toFloat() / job.totalMs,
-            bowlC = ctx.s.machine.tempC,
+            bowlC = bowlC(ctx.s.machine),
             hot = ctx.s.machine.hot,
             canOk = ctx.can(Pending.CLEAR, true),
         )

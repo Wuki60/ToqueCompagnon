@@ -158,7 +158,7 @@ class RobotScreen(c: Context, private val actions: RobotActions, private val nav
             if (i > 0) rules.addView(Ui.divider(c))
             rules.addView(settingRow(c, t, d, allowed(), if (d == null) 52 else 60))
         }
-        // Lancement d'une cuisson manuelle : réglé sur le robot (Réglages › Compagnon).
+        // Lancement d'une cuisson manuelle : réglé sur le robot (Réglages › Téléphone › Lancer depuis le téléphone).
         rules.addView(Ui.divider(c))
         val manualRow = Ui.horizontal(c)
         manualRow.minimumHeight = Ui.dp(60)

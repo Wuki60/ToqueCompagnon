@@ -34,8 +34,12 @@ object Fmt {
         else -> tr("Tiédir")
     }
 
-    /** État du bol d'après sa température : « froid », « tiède », « encore chaud ». */
-    fun bowlNote(tempC: Int): String = when {
+    /** Température du bol en grand : « 64° » ; « — » quand la base ne la mesure pas (Smart hors chauffe). */
+    fun bowl(tempC: Int?): String = if (tempC == null) "—" else "$tempC°"
+
+    /** État du bol d'après sa température : « froid », « tiède », « encore chaud » ; non mesurée : pourquoi. */
+    fun bowlNote(tempC: Int?): String = when {
+        tempC == null -> tr("mesurée en chauffant")
         tempC < 40 -> tr("froid")
         tempC < 60 -> tr("tiède")
         else -> tr("encore chaud")

@@ -524,6 +524,9 @@ object Ui {
     }
 
     /** Couleur liée à une température (comme le robot) : froid bleu, tiède jaune, chaud orange, très chaud rouge. */
+    /** Couleur d'une température du bol ; non mesurée (« — ») : discrète. */
+    fun bowlColor(c: Int?): Int = if (c == null) TEXT2 else tempColor(c)
+
     fun tempColor(c: Int): Int = when {
         c >= 90 -> DANGER
         c >= 60 -> ACCENT_INK

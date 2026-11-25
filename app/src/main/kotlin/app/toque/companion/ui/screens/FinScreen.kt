@@ -5,6 +5,7 @@ import android.view.Gravity
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.LinearLayout
+import app.toque.companion.ui.Fmt
 import app.toque.companion.ui.Icon
 import app.toque.companion.ui.LiveActions
 import app.toque.companion.ui.LivePage
@@ -36,7 +37,7 @@ data class FinState(
     val settings: String = "",
     /** Avancement du programme quand il s'est arrêté (0 à 1). */
     val progress: Float = 1f,
-    val bowlC: Int,
+    val bowlC: Int?,
     /** Contenu chaud (≥ 60 °C) : avertissement. */
     val hot: Boolean = false,
     val canOk: Boolean = true,
@@ -98,8 +99,8 @@ class FinScreen(c: Context, private val actions: LiveActions, private val nav: N
 
     override fun bind(s: FinState, old: FinState?) {
         page.header?.set(s.link)
-        Ui.set(bowl, "${s.bowlC}°")
-        Ui.setColor(bowl, Ui.tempColor(s.bowlC))
+        Ui.set(bowl, Fmt.bowl(s.bowlC))
+        Ui.setColor(bowl, Ui.bowlColor(s.bowlC))
         ring.color = if (s.finished) Ui.OK else Ui.DANGER
         ring.progress = s.progress
         Ui.set(name, s.name)
@@ -110,7 +111,8 @@ class FinScreen(c: Context, private val actions: LiveActions, private val nav: N
         Ui.set(settings, s.settings)
         Ui.show(settings, s.settings.isNotEmpty())
         Ui.show(hotCard, s.hot)
-        Ui.set(hotText, tr("Contenu chaud (%d °C) : attention en ouvrant le couvercle.", s.bowlC))
+        Ui.set(hotText, if (s.bowlC == null) tr("Contenu chaud : attention en ouvrant le couvercle.")
+            else tr("Contenu chaud (%d °C) : attention en ouvrant le couvercle.", s.bowlC))
         Ui.setButtonEnabled(ok, s.canOk)
     }
 }
