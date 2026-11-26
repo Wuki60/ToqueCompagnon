@@ -365,16 +365,19 @@ class Shell(c: Context) : LinearLayout(c), Navigator {
 
 /**
  * Barre d'onglets : icône 24 dp et libellé 12 sp, de la couleur d'accent pour l'onglet affiché. [vertical] :
- * menu sur le côté (grand écran), les onglets les uns sous les autres.
+ * menu sur le côté (grand écran), les onglets les uns sous les autres ; ils se serrent quand l'écran est
+ * peu haut (voir [fit]).
  */
-class BottomBar(c: Context, vertical: Boolean = false, onSelect: (Tab) -> Unit) : LinearLayout(c) {
+class BottomBar(c: Context, private val vertical: Boolean = false, onSelect: (Tab) -> Unit) : LinearLayout(c) {
     private class Item(val root: LinearLayout, val icon: Icon, val label: TextView)
     private val items = EnumMap<Tab, Item>(Tab::class.java)
+    /** Hauteur pour laquelle le menu sur le côté est arrangé (px), -1 : pas encore. */
+    private var fitted = -1
 
     init {
         orientation = if (vertical) VERTICAL else HORIZONTAL
         if (vertical) {
-            Ui.pad(this, 8, 20, 8, 12)
+            Ui.pad(this, 8, ROOMY_TOP_DP, 8, ROOMY_BOTTOM_DP)
             minimumWidth = Ui.dp(88)
         } else Ui.pad(this, 12, 8, 12, 14)
         for (t in Tab.values()) {
@@ -396,9 +399,47 @@ class BottomBar(c: Context, vertical: Boolean = false, onSelect: (Tab) -> Unit) 
             root.isFocusable = true
             root.background = Ui.pressable(Ui.round(0, 24f), 24f)
             root.setOnClickListener { onSelect(t) }
-            if (vertical) addView(root, LayoutParams(Ui.dp(76), Ui.dp(68)).apply { bottomMargin = Ui.dp(6) })
+            if (vertical) addView(root, LayoutParams(Ui.dp(76), Ui.dp(TAB_DP)).apply { bottomMargin = Ui.dp(GAP_DP) })
             else addView(root, LayoutParams(0, Ui.WRAP, 1f))
             items[t] = Item(root, icon, text)
+        }
+    }
+
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        if (vertical && MeasureSpec.getMode(heightMeasureSpec) != MeasureSpec.UNSPECIFIED) fit(MeasureSpec.getSize(heightMeasureSpec))
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+    }
+
+    /**
+     * Menu sur le côté dans [height] px. Sur une tablette, les onglets gardent leur taille. Sur un
+     * téléphone à l'horizontale, il reste moins de hauteur sous les barres du système que le menu n'en
+     * demande : les onglets se la partagent au lieu de dépasser sous l'écran (le dernier, Robot, était
+     * coupé). Les marges se réduisent d'abord, puis les onglets ; s'ils ne tiennent plus avec leur libellé
+     * (fenêtre très basse, très grande police), il ne reste que les icônes, et le nom est lu par TalkBack.
+     */
+    private fun fit(height: Int) {
+        if (height == fitted) return
+        fitted = height
+        val n = items.size
+        val roomy = height >= Ui.dp(ROOMY_TOP_DP + ROOMY_BOTTOM_DP) + n * Ui.dp(TAB_DP + GAP_DP)
+        val top = Ui.dp(if (roomy) ROOMY_TOP_DP else TIGHT_DP)
+        val bottom = Ui.dp(if (roomy) ROOMY_BOTTOM_DP else TIGHT_DP)
+        // Un onglet et l'espace qui le suit.
+        val slot = maxOf(0, height - top - bottom) / n
+        val label = items.values.first().label
+        label.measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED), MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED))
+        // Hauteur qu'il faut à un onglet pour son icône et son libellé, au moins celle d'une cible tactile.
+        val labelled = maxOf(Ui.dp(Ui.TOUCH), Ui.dp(24 + 4) + label.measuredHeight)
+        val gap = minOf(Ui.dp(GAP_DP), maxOf(0, slot - labelled))
+        val tab = minOf(Ui.dp(TAB_DP), slot - gap)
+        val labels = tab >= labelled
+        setPadding(paddingLeft, top, paddingRight, bottom)
+        for (item in items.values) {
+            val lp = item.root.layoutParams as LayoutParams
+            lp.height = tab
+            lp.bottomMargin = gap
+            item.label.visibility = if (labels) View.VISIBLE else View.GONE
+            item.root.contentDescription = if (labels) null else item.label.text
         }
     }
 
@@ -409,6 +450,16 @@ class BottomBar(c: Context, vertical: Boolean = false, onSelect: (Tab) -> Unit) 
             item.label.setTextColor(if (on) Ui.ACCENT_INK else Ui.TEXT2)
             item.root.isSelected = on
         }
+    }
+
+    private companion object {
+        /** Menu sur le côté à son aise : un onglet, l'espace qui le suit, les marges du haut et du bas (dp). */
+        const val TAB_DP = 68
+        const val GAP_DP = 6
+        const val ROOMY_TOP_DP = 20
+        const val ROOMY_BOTTOM_DP = 12
+        /** Marge du haut et du bas quand la hauteur manque (dp). */
+        const val TIGHT_DP = 8
     }
 }
 
