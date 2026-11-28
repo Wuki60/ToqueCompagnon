@@ -97,7 +97,10 @@ class CompanionActivity : Activity(), RobotLink.Listener {
             askNotifications = { askNotifications() }, background = phoneBackground(), clock = clock) { ok, _ ->
             // L'appairage est déjà oublié ici (écran Appairage affiché) ; le robot ne l'a pas confirmé.
             if (!ok) pairing.reset(cameraAccess(), tr("Ce téléphone est oublié ici, mais le robot ne l'a pas confirmé : retirez-le aussi sur le robot."))
-        }.also { it.appearance = appearance }
+        }.also {
+            it.appearance = appearance
+            it.notice = { text -> shell.notice(text) }
+        }
         // Recettes écrites ici : brouillons gardés hors sauvegarde, jusqu'à l'enregistrement par le robot.
         editor = EditFlow(link, shell, { screens.editeur.render(it) }, { screens.etape.render(it) },
             DraftStore(java.io.File(noBackupFilesDir, "brouillons")), schedule, notice = { shell.notice(it) },

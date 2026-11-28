@@ -85,6 +85,13 @@ data class FicheState(
     val canFavorite: Boolean = false,
     /** Le robot enregistre les recettes écrites ici : « Modifier » (une recette à soi) ou « Ma version » (Lidl). */
     val canWrite: Boolean = false,
+    /**
+     * Recette d'un serveur Mealie relié au robot (RecipeDetail.source) : « Depuis Mealie » en sous-titre, comme
+     * sur la page de la recette du robot. Faux chez un robot plus ancien, qui ne dit pas d'où vient la recette.
+     */
+    val mealie: Boolean = false,
+    /** Recette de la communauté toqueapp.org (même source) : « Ma version » le dit. */
+    val community: Boolean = false,
 ) {
     /** Comme sur le robot : quitter le nombre de la recette se confirme d'abord ; y revenir ou changer encore, non. */
     fun servingsNeedConfirm(to: Int): Boolean = baseServings != null && servings == baseServings && to != baseServings
@@ -93,10 +100,17 @@ data class FicheState(
 /** Une étape de la fiche : texte et réglages (« 3 min · 100 °C · vitesse 1 », « Pesée », « À la main »). */
 data class FicheStep(val text: String, val detail: String = "")
 
-/** « Ma recette · 6 étapes » ou « Soupes · 6 étapes ». */
-internal fun recipeSubtitle(personal: Boolean, category: String, stepCount: Int): String =
-    listOfNotNull(if (personal) tr("Ma recette") else category.takeIf { it.isNotBlank() },
+/** « Ma recette · 6 étapes », « Depuis Mealie · 6 étapes » ou « Soupes · 6 étapes ». */
+internal fun recipeSubtitle(personal: Boolean, category: String, stepCount: Int, mealie: Boolean = false): String =
+    listOfNotNull(if (personal) tr("Ma recette") else if (mealie) tr("Depuis Mealie") else category.takeIf { it.isNotBlank() },
         if (stepCount > 0) tr("%d étapes", stepCount) else null).joinToString(" · ")
+
+/** Texte de « Ma version », celui de la page de la recette du robot : ce qui reste tel quel dépend d'où vient la recette. */
+internal fun myVersionText(s: FicheState): String = when {
+    s.mealie -> tr("Toque crée une copie de cette recette dans Mes recettes, telle qu'elle est affichée, pour que vous la modifiiez. La recette reste telle quelle dans Mealie.")
+    s.community -> tr("Toque crée une copie de cette recette dans Mes recettes, telle qu'elle est affichée, pour que vous la modifiiez. La recette de la communauté reste telle quelle.")
+    else -> tr("Toque crée une copie de cette recette dans Mes recettes, telle qu'elle est affichée, pour que vous la modifiiez. La recette Lidl reste telle quelle.")
+}
 
 class FicheScreen(c: Context, private val actions: RecipeActions, private val pictures: PictureSource, private val nav: Navigator) :
     Screen<FicheState>(c) {
@@ -174,7 +188,10 @@ class FicheScreen(c: Context, private val actions: RecipeActions, private val pi
         edit = Ui.button(c, " ", Ui.Style.OUTLINE, Icon.Kind.EDIT, height = 44, textSize = 15f, iconSize = 18) {
             val s = state
             if (s != null && s.canWrite && !s.loading && s.error == null) {
-                if (s.personal) actions.editRecipe(s.id) else copySheet.show()
+                if (s.personal) actions.editRecipe(s.id) else {
+                    Ui.set(copySheet.body, myVersionText(s))
+                    copySheet.show()
+                }
             }
         }
         Ui.ellipsize(edit.label, 2)
@@ -329,7 +346,7 @@ class FicheScreen(c: Context, private val actions: RecipeActions, private val pi
             scroll.scrollTo(0, 0)
         }
         Ui.set(bar.title, s.title)
-        Ui.set(bar.subtitle, recipeSubtitle(s.personal, s.category, s.stepCount))
+        Ui.set(bar.subtitle, recipeSubtitle(s.personal, s.category, s.stepCount, s.mealie))
         // Robot qui enregistre les favoris : l'étoile-bouton ; sinon l'étiquette d'avant, pour un favori.
         Ui.show(favorite, s.favorite && !s.canFavorite)
         Ui.show(star, s.canFavorite)

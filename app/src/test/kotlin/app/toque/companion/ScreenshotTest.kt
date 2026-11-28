@@ -183,6 +183,18 @@ class ScreenshotTest {
         Shot("JournalVide", Route.JOURNAL) { s, _ -> s.journal.render(JournalState()) },
         Shot("Robot", Route.ROBOT),
         Shot("RobotOublier", Route.ROBOT) { _, root -> click(root, "Oublier", "Forget") },
+        // Ce téléphone renommé (nom le plus long que le robot garde), et la feuille « Renommer » : vide, puis préremplie.
+        Shot("RobotNomLong", Route.ROBOT) { s, _ ->
+            s.robot.render(Samples.robot().copy(phoneName = "Le téléphone de la cuisi", phoneLabel = "Le téléphone de la cuisi"))
+        },
+        Shot("RobotRenommer", Route.ROBOT) { s, _ -> s.robot.openRename() },
+        Shot("RobotRenommerNom", Route.ROBOT) { s, _ ->
+            s.robot.render(Samples.robot().copy(phoneName = "Cuisine de Léa", phoneLabel = "Cuisine de Léa"))
+            s.robot.openRename()
+        },
+        Shot("RobotRenommerEnvoi", Route.ROBOT) { s, _ -> s.robot.render(Samples.robot().copy(renaming = true)) },
+        // Robot plus ancien : pas de « Renommer ».
+        Shot("RobotAncienSansRenommer", Route.ROBOT) { s, _ -> s.robot.render(Samples.robot().copy(canRename = false)) },
         Shot("RobotNotificationsRefusees", Route.ROBOT) { s, _ -> s.robot.render(Samples.robot().copy(notificationsAllowed = false)) },
         Shot("RobotBatterieLimitee", Route.ROBOT) { s, _ -> s.robot.render(Samples.robot().copy(batteryRestricted = true)) },
         Shot("RobotSuiviCoupe", Route.ROBOT) { s, _ -> s.robot.render(Samples.robot().copy(background = false, batteryRestricted = true)) },
@@ -264,6 +276,17 @@ class ScreenshotTest {
             s.fiche.render(Samples.fiche().copy(canWrite = true, personal = false, category = "Soupes"))
             click(root, "Ma version", "My version")
         },
+        // Recette d'un serveur Mealie relié au robot : « Depuis Mealie », « Ma version » et sa confirmation ; la pastille.
+        Shot("FicheMealie", Route.FICHE) { s, _ -> s.fiche.render(mealieFiche()) },
+        Shot("FicheMealieMaVersion", Route.FICHE) { s, root ->
+            s.fiche.render(mealieFiche())
+            click(root, tr("Ma version"))
+        },
+        Shot("RecettesMealie", Route.RECETTES) { s, _ ->
+            s.recettes.render(Samples.recettes().let { r -> r.copy(filter = RecipeChip.MEALIE,
+                filters = RecipeChip.FIXED + RecipeChip.USER + RecipeChip.MEALIE + RecipeChip.QUICK, items = r.items.filter { !it.personal }.take(3),
+                hasMore = false) })
+        },
         Shot("Editeur", Route.EDITEUR),
         Shot("EditeurNouvelle", Route.EDITEUR) { s, _ -> s.editeur.render(EditeurState(heading = tr("Nouvelle recette"), phase = EditPhase.EDITING)) },
         Shot("EditeurRefus", Route.EDITEUR) { s, _ -> s.editeur.render(Samples.editeurRefus()) },
@@ -298,6 +321,9 @@ class ScreenshotTest {
         Shot("EtapeReglageProgramme", Route.ETAPE) { s, _ -> s.etape.render(Samples.etapeReglageProgramme()) },
         Shot("EtapeReglageRefuse", Route.ETAPE) { s, _ -> s.etape.render(Samples.etapeReglageRefuse()) },
     )
+
+    /** Fiche d'une recette Mealie (titre et contenu de la fiche d'essai), chez un robot qui écrit les recettes du téléphone. */
+    private fun mealieFiche() = Samples.fiche().copy(personal = false, mealie = true, category = "Desserts", canWrite = true, canFavorite = true)
 
     /** Section « Apparence » : le robot a une autre couleur et l'autre thème, et sait les recevoir. */
     private fun robotLooksElse() = LookState(accent = Ui.ACCENT, light = Ui.light, robotAccent = 0xFFE8D44D.toInt(), robotLight = !Ui.light,
@@ -354,6 +380,16 @@ class ScreenshotTest {
     @Test fun ukrainian() = capture("w390dp-h844dp-port-xhdpi", 1f, "-uk", language = "uk", only = UK_SHOTS)
 
     /** Tablette : menu des onglets sur le côté, écran centré ; catalogue à gauche de la fiche. */
+    /**
+     * Renommer ce téléphone et les recettes Mealie dans chaque langue de l'appli (l'anglais et le français ont
+     * déjà tout) : rien de coupé, même dans les langues aux mots plus longs.
+     */
+    @Test fun renameAndMealieInEveryLanguage() {
+        for (language in listOf("es", "de", "ca", "uk"))
+            capture("w390dp-h844dp-port-xhdpi", 1f, "-$language", language = language, only = RENAME_MEALIE_SHOTS)
+        capture("w360dp-h640dp-port-xhdpi", 1.3f, "-de-360x640-font130", language = "de", only = RENAME_MEALIE_SHOTS)
+    }
+
     @Test fun tablet() = capture("w1280dp-h800dp-land-mdpi", 1f, "-tablette", only = WIDE_SHOTS, wide = true)
 
     /** Téléphone à l'horizontale : comme une tablette, en moins haut. */
@@ -381,7 +417,10 @@ class ScreenshotTest {
                 only = setOf("Main", "Robot", "RobotRoue", "RobotApparenceRoue", "QuestionRobotRoue"), accent = hex, theme = theme)
     }
 
-    private val WIDE_SHOTS = setOf("Repos", "Main", "Recettes", "Fiche", "FicheEtapes", "Envoyee", "Courses", "Robot", "Journal", "Appairage", "Editeur")
+    private val WIDE_SHOTS = setOf("Repos", "Main", "Recettes", "Fiche", "FicheEtapes", "Envoyee", "Courses", "Robot", "Journal", "Appairage", "Editeur",
+        "RobotRenommerNom", "FicheMealie", "FicheMealieMaVersion")
+    private val RENAME_MEALIE_SHOTS = setOf("Robot", "RobotNomLong", "RobotRenommer", "RobotRenommerNom", "RobotRenommerEnvoi",
+        "FicheMealie", "FicheMealieMaVersion", "RecettesMealie")
     private val UK_SHOTS = setOf("ProgrammeSmart", "Repos", "ReposSmart", "Main", "Etapes", "Pesee", "Pause", "Recettes", "Fiche", "Courses", "CoursesVide", "Robot", "RobotMiseAJour",
         "Journal", "Appairage", "AppairageCode", "Editeur", "Manuel", "Programme")
 

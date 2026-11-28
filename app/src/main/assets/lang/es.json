@@ -823,5 +823,14 @@
   "Déjà à jour": "Ya está al día",
   "Cette recette ne prend pas votre réglage du robot": "Esta receta no admite su ajuste del robot",
   "Le robot ne prend pas votre réglage depuis le téléphone": "El robot no admite su ajuste desde el teléfono",
-  "Ce téléphone est en lecture seule : les commandes se font sur le robot": "Este teléfono es de solo lectura: el control se hace en el robot"
+  "Ce téléphone est en lecture seule : les commandes se font sur le robot": "Este teléfono es de solo lectura: el control se hace en el robot",
+  "Depuis Mealie": "Desde Mealie",
+  "Toque crée une copie de cette recette dans Mes recettes, telle qu'elle est affichée, pour que vous la modifiiez. La recette reste telle quelle dans Mealie.": "Toque crea una copia de esta receta en Mis recetas, tal como se muestra, para que la modifiques. La receta sigue igual en Mealie.",
+  "Toque crée une copie de cette recette dans Mes recettes, telle qu'elle est affichée, pour que vous la modifiiez. La recette de la communauté reste telle quelle.": "Toque crea una copia de esta receta en Mis recetas, tal como se muestra, para que la modifiques. La receta de la comunidad no cambia.",
+  "Renommer": "Renombrar",
+  "Renommer ce téléphone": "Renombrar este teléfono",
+  "Le nom que le robot donne à ce téléphone, dans sa liste et dans son journal.": "El nombre que el robot da a este teléfono, en su lista y en su registro.",
+  "Nom du téléphone": "Nombre del teléfono",
+  "Enregistrer": "Guardar",
+  "Laissez vide pour reprendre « %s ».": "Déjelo vacío para volver a «%s»."
 }

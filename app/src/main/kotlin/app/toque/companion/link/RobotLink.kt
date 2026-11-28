@@ -12,6 +12,7 @@ import app.toque.core.companion.RecipeEditRequest
 import app.toque.core.companion.JournalPage
 import app.toque.core.companion.PairReply
 import app.toque.core.companion.PairingPayload
+import app.toque.core.companion.PhoneWire
 import app.toque.core.companion.RecipeDetail
 import app.toque.core.companion.StartRequest
 import app.toque.core.companion.StateWire
@@ -527,6 +528,11 @@ class RobotLink(
 
     /** Couleur et/ou thème du robot (state.can.setAppearance) ; null : inchangé. */
     fun setAppearance(accent: String?, theme: String?, done: (CommandOutcome) -> Unit) = command(done) { it.setAppearance(accent, theme) }
+    /**
+     * Le nom de ce téléphone sur le robot (state.can.renamePhone) ; vide : « Téléphone N ». Rend ce
+     * téléphone tel que le robot le connaît désormais (nom nettoyé par le robot).
+     */
+    fun renamePhone(name: String, done: (Result<PhoneWire>) -> Unit) = request(commands, { it.renameMe(name) }, done)
     /** Favori du robot pour la recette [id] (state.can.favorite) ; rend l'état enregistré. */
     fun setFavorite(id: String, favorite: Boolean, done: (Result<FavoriteReply>) -> Unit) =
         request(commands, { it.setFavorite(id, favorite) }, done)

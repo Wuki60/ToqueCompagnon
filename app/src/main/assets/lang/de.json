@@ -823,5 +823,14 @@
   "Déjà à jour": "Bereits aktuell",
   "Cette recette ne prend pas votre réglage du robot": "Dieses Rezept nimmt Ihre Robotereinstellung nicht an",
   "Le robot ne prend pas votre réglage depuis le téléphone": "Der Roboter nimmt Ihre Einstellung nicht vom Telefon an",
-  "Ce téléphone est en lecture seule : les commandes se font sur le robot": "Dieses Telefon ist schreibgeschützt: Gesteuert wird am Roboter"
+  "Ce téléphone est en lecture seule : les commandes se font sur le robot": "Dieses Telefon ist schreibgeschützt: Gesteuert wird am Roboter",
+  "Depuis Mealie": "Aus Mealie",
+  "Toque crée une copie de cette recette dans Mes recettes, telle qu'elle est affichée, pour que vous la modifiiez. La recette reste telle quelle dans Mealie.": "Toque legt eine Kopie dieses Rezepts so wie angezeigt in Meine Rezepte an, damit Sie es bearbeiten können. In Mealie bleibt das Rezept unverändert.",
+  "Toque crée une copie de cette recette dans Mes recettes, telle qu'elle est affichée, pour que vous la modifiiez. La recette de la communauté reste telle quelle.": "Toque legt eine Kopie dieses Rezepts so wie angezeigt unter Meine Rezepte an, damit Sie es bearbeiten können. Das Community-Rezept bleibt unverändert.",
+  "Renommer": "Umbenennen",
+  "Renommer ce téléphone": "Dieses Telefon umbenennen",
+  "Le nom que le robot donne à ce téléphone, dans sa liste et dans son journal.": "Der Name, den der Roboter diesem Telefon gibt, in seiner Liste und in seinem Protokoll.",
+  "Nom du téléphone": "Name des Telefons",
+  "Enregistrer": "Speichern",
+  "Laissez vide pour reprendre « %s ».": "Leer lassen, um wieder „%s“ zu verwenden."
 }

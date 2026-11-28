@@ -156,6 +156,9 @@ interface RobotActions {
     /** « Oublier » confirmé : ce téléphone se retire du robot, puis `nav.showPairing(true)`. */
     fun forgetPhone() {}
 
+    /** « Renommer » enregistré : le nom de ce téléphone sur le robot ; vide : celui par défaut (« Téléphone 1 »). */
+    fun renamePhone(name: String) {}
+
     /** Interrupteur d'alerte basculé (réglage du téléphone). */
     fun setAlert(kind: AlertKind, on: Boolean) {}
 

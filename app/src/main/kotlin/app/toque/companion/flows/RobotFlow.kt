@@ -1,6 +1,7 @@
 package app.toque.companion.flows
 
 import app.toque.companion.alerts.AlertKind
+import app.toque.companion.link.CommandOutcome
 import app.toque.companion.link.LinkPhase
 import app.toque.companion.link.LinkStatus
 import app.toque.companion.link.RobotLink
@@ -8,6 +9,7 @@ import app.toque.companion.ui.Link
 import app.toque.companion.ui.RobotActions
 import app.toque.companion.ui.screens.PairMethod
 import app.toque.companion.ui.screens.RobotState
+import app.toque.core.companion.PhoneWire
 import app.toque.core.companion.StateWire
 import app.toque.core.i18n.I18n
 import app.toque.core.i18n.tr
@@ -37,7 +39,8 @@ interface BackgroundFollow {
 }
 
 /**
- * Onglet Robot branché : nom et version du robot (son état), méthode et date d'appairage (gardées
+ * Onglet Robot branché : nom et version du robot (son état), nom de ce téléphone sur le robot et
+ * « Renommer » par [RobotLink.renamePhone] (robot qui le permet), méthode et date d'appairage (gardées
  * à l'appairage), « Oublier » par [RobotLink.forget], interrupteurs d'alertes, et le bandeau quand
  * les notifications du téléphone sont refusées. Kotlin pur, fil principal.
  */
@@ -60,8 +63,18 @@ class RobotFlow(
     var updates: app.toque.companion.update.UpdateFlow? = null
     /** Langue de l'appli (section « Langue ») : réglage, langues proposées, et le changement. */
     var language: LanguageChoice? = null
+    /** Message court de l'appli (refus du robot, réseau) ; branché par l'activité. */
+    var notice: (String) -> Unit = {}
     private var robot: StateWire? = null
     private var forgetting = false
+    private var renaming = false
+    /**
+     * Ce téléphone tel que le robot l'a rendu après « Renommer », jusqu'à ce qu'un état le porte : un état
+     * parti avant la réponse ne remet pas l'ancien nom à l'écran. Le second état reçu après la réponse fait
+     * foi de toute façon (le robot a changé de révision avant de répondre ; un nom donné depuis sur le robot).
+     */
+    private var renamed: PhoneWire? = null
+    private var statesSinceRename = 0
     var state: RobotState? = null
         private set
     private val unsubscribe = link.addListener(this)
@@ -72,6 +85,8 @@ class RobotFlow(
     fun refresh() {
         val p = link.paired ?: return
         val s = robot
+        // Le nom rendu par « Renommer » tant que l'état reçu ne le porte pas encore.
+        val me = renamed ?: s?.me?.takeIf { it.id.isNotEmpty() }
         val l = when (link.status.phase) {
             LinkPhase.CONNECTED -> Link.CONNECTED
             LinkPhase.UNREACHABLE -> Link.OFFLINE
@@ -86,6 +101,11 @@ class RobotFlow(
             alerts = switches.enabled().map { toScreen(it) }.toSet(),
             notificationsAllowed = notificationsAllowed(),
             forgetting = forgetting,
+            phoneName = me?.name.orEmpty(),
+            phoneLabel = me?.label.orEmpty(),
+            phoneDefault = me?.number?.takeIf { it > 0 }?.let { tr("Téléphone %d", it) }.orEmpty(),
+            canRename = s?.can?.renamePhone?.allowed == true && me != null,
+            renaming = renaming,
             manualStartOff = manualStartOff(s),
             alertsMuted = background.alertsMuted(),
             background = background.enabled(),
@@ -109,6 +129,26 @@ class RobotFlow(
         link.forget { out ->
             forgetting = false
             onForgotten(out.ok, out.message)
+        }
+    }
+
+    /**
+     * « Renommer » confirmé : le robot nettoie le nom (une ligne, 24 caractères ; vide : « Téléphone N »)
+     * et rend ce téléphone tel qu'il le connaît, montré tout de suite. Un refus ou une erreur réseau : le
+     * message habituel, le nom ne change pas.
+     */
+    override fun renamePhone(name: String) {
+        if (renaming || robot?.can?.renamePhone?.allowed != true) return
+        renaming = true
+        refresh()
+        link.renamePhone(name) { r ->
+            renaming = false
+            r.onSuccess {
+                renamed = it
+                statesSinceRename = 0
+            }
+            r.onFailure { notice(CommandOutcome.of(it).message) }
+            refresh()
         }
     }
 
@@ -140,6 +180,9 @@ class RobotFlow(
 
     override fun onState(state: StateWire, receivedMono: Long) {
         robot = state
+        // L'état porte le nom rendu par le robot (ou un autre, donné depuis) : il fait foi.
+        val r = renamed
+        if (r != null && (state.me.id != r.id || state.me.name == r.name || ++statesSinceRename >= 2)) renamed = null
         refresh()
     }
 

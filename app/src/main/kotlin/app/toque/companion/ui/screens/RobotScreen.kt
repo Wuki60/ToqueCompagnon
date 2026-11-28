@@ -3,6 +3,9 @@ package app.toque.companion.ui.screens
 import android.content.Context
 import android.view.Gravity
 import android.view.View
+import android.text.InputFilter
+import android.view.inputmethod.EditorInfo
+import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -26,6 +29,7 @@ import app.toque.companion.ui.WheelSheet
 import app.toque.companion.ui.settingRow
 import app.toque.companion.update.UpdatePhase
 import app.toque.companion.update.UpdateView
+import app.toque.core.companion.PairingManager
 import app.toque.core.i18n.tr
 
 /** Alertes du téléphone (réglages du téléphone, pas du robot). */
@@ -50,6 +54,16 @@ data class RobotState(
     val notificationsAllowed: Boolean = true,
     /** « Oublier » en cours. */
     val forgetting: Boolean = false,
+    /** Ce téléphone tel que le robot le nomme (« Téléphone 1 », « Cuisine de Léa ») ; vide : pas encore d'état du robot. */
+    val phoneName: String = "",
+    /** Le nom donné à ce téléphone, sans celui par défaut : de quoi préremplir « Renommer » (vide : aucun). */
+    val phoneLabel: String = "",
+    /** Le nom par défaut (« Téléphone 1 ») : l'indication du champ, repris quand il est vide. */
+    val phoneDefault: String = "",
+    /** Le robot laisse ce téléphone changer son nom (state.can.renamePhone) ; un robot plus ancien, non. */
+    val canRename: Boolean = false,
+    /** Nouveau nom en route vers le robot. */
+    val renaming: Boolean = false,
     /** Lancer une cuisson manuelle d'ici : null = oui, sinon pourquoi non (« Coupé sur le robot »). */
     val manualStartOff: String? = null,
     /** Notifications permises, mais le canal d'une alerte allumée est bloqué ou silencieux dans Android. */
@@ -75,7 +89,11 @@ class RobotScreen(c: Context, private val actions: RobotActions, private val nav
     private val name = Ui.ellipsize(Ui.text(c, "", 16f, Ui.TEXT, Ui.MEDIUM))
     private val version = Ui.ellipsize(Ui.text(c, "", 13f, Ui.TEXT2), 2)
     private val paired = Ui.ellipsize(Ui.text(c, "", 13f, Ui.TEXT2), 2)
+    /** Nom de ce téléphone sur le robot (« Téléphone appairé » tant que le robot ne l'a pas dit) ; 24 caractères tiennent sur deux lignes. */
+    private val phoneTitle = Ui.ellipsize(Ui.text(c, tr("Téléphone appairé"), 15f), 2)
     private lateinit var forget: Ui.Button
+    private lateinit var rename: Ui.Button
+    private lateinit var renameSheet: RenameSheet
     private val blocked = Ui.horizontal(c)
     private lateinit var blockedText: TextView
     private lateinit var blockedButton: Ui.Button
@@ -132,13 +150,22 @@ class RobotScreen(c: Context, private val actions: RobotActions, private val nav
         qr.addView(Icon(c, Icon.Kind.QR, Ui.OK), Ui.flp(Ui.dp(22), Ui.dp(22), Gravity.CENTER))
         phone.addView(qr, LinearLayout.LayoutParams(Ui.dp(44), Ui.dp(44)).apply { rightMargin = Ui.dp(12) })
         val phoneText = Ui.vertical(c)
-        phoneText.addView(Ui.ellipsize(Ui.text(c, tr("Téléphone appairé"), 15f)))
+        phoneText.addView(phoneTitle)
         phoneText.addView(paired, Ui.lp(t = 1))
         phone.addView(phoneText, Ui.lp(0, Ui.WRAP, 1f, r = 8))
         forget = Ui.button(c, tr("Oublier"), Ui.Style.GHOST, height = 44, textSize = 14f) { if (state?.forgetting == false) confirm.show() }
         forget.setPadding(Ui.dp(14), 0, Ui.dp(14), 0)
         phone.addView(forget, Ui.lp(Ui.WRAP, Ui.WRAP))
         robot.addView(phone, Ui.lp(t = 2))
+        // « Renommer » : sous le nom, seulement quand le robot le permet (un robot plus ancien, non).
+        rename = Ui.button(c, tr("Renommer"), Ui.Style.OUTLINE, Icon.Kind.EDIT, height = 40, textSize = 14f, iconSize = 16) {
+            val st = state
+            if (st != null && st.canRename && !st.renaming) renameSheet.show(st.phoneLabel, st.phoneDefault)
+        }
+        rename.setPadding(Ui.dp(14), 0, Ui.dp(16), 0)
+        Ui.ellipsize(rename.label, 2)
+        rename.visibility = View.GONE
+        robot.addView(rename, Ui.lp(Ui.WRAP, Ui.WRAP, l = 56, t = 4))
         column.addView(robot, Ui.lp(l = 20, t = 12, r = 20))
 
         // Autorisations fixées par Toque : affichées, sans réglage.
@@ -355,6 +382,8 @@ class RobotScreen(c: Context, private val actions: RobotActions, private val nav
         root.addView(confirm, Ui.flp())
         wheelSheet = WheelSheet(c) { actions.chooseAccent(it) }
         root.addView(wheelSheet, Ui.flp())
+        renameSheet = RenameSheet(c) { actions.renamePhone(it) }
+        root.addView(renameSheet, Ui.flp())
         return root
     }
 
@@ -374,6 +403,12 @@ class RobotScreen(c: Context, private val actions: RobotActions, private val nav
             PairMethod.QR -> tr("Par QR code, le %s", s.pairedOn)
             PairMethod.CODE -> tr("Par code, le %s", s.pairedOn)
         })
+        Ui.set(phoneTitle, s.phoneName.ifEmpty { tr("Téléphone appairé") })
+        Ui.show(rename, s.canRename)
+        Ui.setButtonEnabled(rename, !s.renaming)
+        Ui.set(rename.label, if (s.renaming) tr("Envoi…") else tr("Renommer"))
+        // Le robot ne le permet plus (ou n'est plus joint) : la feuille se ferme.
+        if (!s.canRename && renameSheet.showing) renameSheet.hide()
         Ui.setButtonEnabled(forget, !s.forgetting)
         Ui.set(forget.label, if (s.forgetting) tr("Oubli…") else tr("Oublier"))
         Ui.show(blocked, !s.notificationsAllowed || s.alertsMuted)
@@ -461,6 +496,10 @@ class RobotScreen(c: Context, private val actions: RobotActions, private val nav
     }
 
     override fun onBack(): Boolean {
+        if (renameSheet.showing) {
+            renameSheet.hide()
+            return true
+        }
         if (wheelSheet.showing) {
             wheelSheet.hide()
             return true
@@ -471,13 +510,84 @@ class RobotScreen(c: Context, private val actions: RobotActions, private val nav
     }
 
     override fun onHide() {
+        renameSheet.hide()
         confirm.hide()
         wheelSheet.hide()
+    }
+
+    /** « Renommer » (essais) : la feuille ouverte comme par le bouton. */
+    fun openRename(): RenameSheet {
+        state?.let { renameSheet.show(it.phoneLabel, it.phoneDefault) }
+        return renameSheet
     }
 
     /** La roue (essais) : ouverte sur la couleur du téléphone. */
     fun openWheel(): WheelSheet {
         wheelSheet.show(lookAccent)
         return wheelSheet
+    }
+}
+
+/**
+ * « Renommer ce téléphone » : feuille posée sur l'écran (fond assombri, carte en bas), de la famille de
+ * [ConfirmSheet], avec un champ d'une ligne de [PairingManager.MAX_LABEL] caractères, le nom donné prérempli
+ * et le nom par défaut en indication. Le robot nettoie ce qui part ; vide : il reprend le nom par défaut.
+ */
+class RenameSheet(c: Context, private val onSave: (String) -> Unit) : FrameLayout(c) {
+    val field: EditText = editField(c, "")
+    private val hint = Ui.text(c, "", 13f, Ui.TEXT2, lineHeight = 18f)
+
+    init {
+        setBackgroundColor(Ui.SCRIM)
+        isClickable = true
+        setOnClickListener { hide() }
+        val card = Ui.vertical(c)
+        card.background = Ui.round(Ui.SURFACE, 28f, Ui.STROKE, 1f)
+        card.isClickable = true
+        Ui.pad(card, 20, 20, 20, 16)
+        card.addView(Ui.text(c, tr("Renommer ce téléphone"), 20f, Ui.TEXT, Ui.MEDIUM, lineHeight = 25f))
+        card.addView(Ui.text(c, tr("Le nom que le robot donne à ce téléphone, dans sa liste et dans son journal."), 15f, Ui.TEXT2, lineHeight = 21f),
+            Ui.lp(t = 8))
+        // Sur une ligne, au plus ce que le robot garde ; la touche Terminé enregistre.
+        field.filters = arrayOf<InputFilter>(InputFilter.LengthFilter(PairingManager.MAX_LABEL))
+        field.imeOptions = EditorInfo.IME_ACTION_DONE
+        field.contentDescription = tr("Nom du téléphone")
+        field.setOnEditorActionListener { _, action, _ ->
+            if (action == EditorInfo.IME_ACTION_DONE) { save(); true } else false
+        }
+        card.addView(field, Ui.lp(t = 14))
+        card.addView(hint, Ui.lp(t = 6))
+        val row = Ui.horizontal(c)
+        row.addView(Ui.button(c, tr("Annuler"), Ui.Style.SECONDARY, height = 52) { hide() }.also { Ui.ellipsize(it.label, 2) }, Ui.lp(0, Ui.WRAP, 1f))
+        row.addView(Ui.button(c, tr("Enregistrer"), Ui.Style.PRIMARY, height = 52) { save() }.also { Ui.ellipsize(it.label, 2) },
+            Ui.lp(0, Ui.WRAP, 1f, l = 10))
+        card.addView(row, Ui.lp(t = 16))
+        addView(card, Ui.flp(Ui.MATCH, Ui.WRAP, Gravity.BOTTOM).apply { setMargins(Ui.dp(12), 0, Ui.dp(12), Ui.dp(12)) })
+        visibility = View.GONE
+    }
+
+    val showing: Boolean get() = visibility == View.VISIBLE
+
+    /** Ouverte sur [label] (le nom donné, vide : aucun) ; [default] (« Téléphone 1 ») en indication. */
+    fun show(label: String, default: String) {
+        field.hint = default
+        field.setText(label)
+        field.setSelection(field.text.length)
+        Ui.set(hint, if (default.isEmpty()) "" else nbsp(tr("Laissez vide pour reprendre « %s ».", default)))
+        Ui.show(hint, default.isNotEmpty())
+        Ui.show(this, true)
+        field.requestFocus()
+    }
+
+    fun hide() {
+        if (!showing) return
+        hideKeyboard(field)
+        Ui.show(this, false)
+    }
+
+    private fun save() {
+        val name = field.text?.toString().orEmpty()
+        hide()
+        onSave(name)
     }
 }

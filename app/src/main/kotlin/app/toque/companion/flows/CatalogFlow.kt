@@ -654,6 +654,8 @@ class CatalogFlow(
 
         fun fiche(d: RecipeDetail) = FicheState(
             id = d.id, title = d.title, personal = d.user, category = d.category, stepCount = d.steps.size, favorite = d.favorite,
+            // D'où vient la recette (absent chez un robot plus ancien : ni Mealie ni communauté).
+            mealie = d.mealie, community = d.community,
             picture = d.hasImage, durationMin = d.totalMinutes.takeIf { it > 0 }, servings = d.servings.takeIf { it > 0 },
             servingUnit = d.servingUnit,
             // Réglage du nombre de personnes : seulement si le robot le propose (pas un robot plus ancien).

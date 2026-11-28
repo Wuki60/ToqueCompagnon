@@ -823,5 +823,14 @@
   "Déjà à jour": "Уже актуально",
   "Cette recette ne prend pas votre réglage du robot": "Цей рецепт не приймає ваше налаштування робота",
   "Le robot ne prend pas votre réglage depuis le téléphone": "Робот не приймає ваше налаштування з телефона",
-  "Ce téléphone est en lecture seule : les commandes se font sur le robot": "Цей телефон лише для перегляду: керування — на роботі"
+  "Ce téléphone est en lecture seule : les commandes se font sur le robot": "Цей телефон лише для перегляду: керування — на роботі",
+  "Depuis Mealie": "З Mealie",
+  "Toque crée une copie de cette recette dans Mes recettes, telle qu'elle est affichée, pour que vous la modifiiez. La recette reste telle quelle dans Mealie.": "Toque створює копію цього рецепта в «Мої рецепти» такою, як вона показана, щоб ви могли її змінити. У Mealie рецепт лишається без змін.",
+  "Toque crée une copie de cette recette dans Mes recettes, telle qu'elle est affichée, pour que vous la modifiiez. La recette de la communauté reste telle quelle.": "Копія для редагування в «Мої рецепти». Рецепт спільноти лишається без змін.",
+  "Renommer": "Перейменувати",
+  "Renommer ce téléphone": "Перейменувати цей телефон",
+  "Le nom que le robot donne à ce téléphone, dans sa liste et dans son journal.": "Назва, яку робот дає цьому телефону, у своєму списку та журналі.",
+  "Nom du téléphone": "Назва телефона",
+  "Enregistrer": "Зберегти",
+  "Laissez vide pour reprendre « %s ».": "Залиште порожнім, щоб повернути «%s»."
 }

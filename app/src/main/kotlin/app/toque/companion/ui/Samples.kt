@@ -304,6 +304,10 @@ object Samples {
         version = "0.7.0",
         pairMethod = PairMethod.QR,
         pairedOn = "21 novembre",
+        // Ce téléphone, sous son nom par défaut, chez un robot qui le laisse se renommer.
+        phoneName = tr("Téléphone %d", 1),
+        phoneDefault = tr("Téléphone %d", 1),
+        canRename = true,
         alerts = setOf(AlertKind.WAITING, AlertKind.STEP_END, AlertKind.PAUSE, AlertKind.TEMP),
         languages = listOf("fr" to "Français", "ca" to "Català", "de" to "Deutsch", "en" to "English", "es" to "Español", "uk" to "Українська"),
         update = app.toque.companion.update.UpdateView(installed = "0.5.0", phase = app.toque.companion.update.UpdatePhase.UP_TO_DATE, version = "0.5.0"),

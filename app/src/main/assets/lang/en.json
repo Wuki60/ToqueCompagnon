@@ -823,5 +823,14 @@
   "Déjà à jour": "Already up to date",
   "Cette recette ne prend pas votre réglage du robot": "This recipe does not take your robot setting",
   "Le robot ne prend pas votre réglage depuis le téléphone": "The robot does not take your setting from the phone",
-  "Ce téléphone est en lecture seule : les commandes se font sur le robot": "This phone is read-only: controls are on the robot"
+  "Ce téléphone est en lecture seule : les commandes se font sur le robot": "This phone is read-only: controls are on the robot",
+  "Depuis Mealie": "From Mealie",
+  "Toque crée une copie de cette recette dans Mes recettes, telle qu'elle est affichée, pour que vous la modifiiez. La recette reste telle quelle dans Mealie.": "Toque creates a copy of this recipe in My recipes, as it is shown, for you to edit. The recipe stays as it is in Mealie.",
+  "Toque crée une copie de cette recette dans Mes recettes, telle qu'elle est affichée, pour que vous la modifiiez. La recette de la communauté reste telle quelle.": "Toque creates a copy of this recipe in My recipes, as shown, for you to edit. The community recipe stays as it is.",
+  "Renommer": "Rename",
+  "Renommer ce téléphone": "Rename this phone",
+  "Le nom que le robot donne à ce téléphone, dans sa liste et dans son journal.": "The name the robot gives this phone, in its list and in its log.",
+  "Nom du téléphone": "Phone name",
+  "Enregistrer": "Save",
+  "Laissez vide pour reprendre « %s ».": "Leave empty to go back to “%s”."
 }

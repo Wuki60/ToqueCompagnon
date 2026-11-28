@@ -81,8 +81,24 @@ class SimRobot {
     val written = java.util.concurrent.ConcurrentHashMap<String, Recipe>()
     /** Recette ouverte dans l'« éditeur » du robot, ou null. */
     @Volatile var editorOpen: String? = null
+    /** Recettes d'un serveur Mealie relié au robot ([addMealie]), en lecture seule comme sur le robot. */
+    val mealie = java.util.concurrent.ConcurrentHashMap<String, Recipe>()
     /** La recette telle qu'enregistrée. */
-    fun stored(id: String): Recipe? = written[id] ?: byId[id]
+    fun stored(id: String): Recipe? = written[id] ?: mealie[id] ?: byId[id]
+
+    /**
+     * Relie un « serveur Mealie » qui apporte une recette inventée : elle entre au catalogue (la pastille
+     * « Mealie » du robot apparaît) et sa fiche dit d'où elle vient. Rend la recette.
+     */
+    fun addMealie(): Recipe {
+        val r = Recipe(id = "mealie-0b1c2d3e", title = "Gâteau du verger", category = "Desserts", servings = 6, totalMinutes = 50,
+            source = app.toque.core.recipes.RecipeSource.MEALIE,
+            ingredients = listOf(IngredientGroup(items = listOf(Ingredient("3", "", "pommes"), Ingredient("120", "g", "Farine")))),
+            steps = listOf(Step("Mettre la farine dans le bol.", weigh = Weigh("Farine", 120)), Step("Mélanger.", StepMachine(StepProgram.MANUAL, 30, 3))))
+        mealie[r.id] = r
+        index = SearchIndex(recipes + r)
+        return r
+    }
     /** La recette à son propre nombre, corrections comprises. */
     fun base(id: String): Recipe? = stored(id)?.let { r -> corrections[id]?.let { r.corrected(it) } ?: r }
     /** Catalogue servi ; remplaçable (une catégorie qui disparaît). */
