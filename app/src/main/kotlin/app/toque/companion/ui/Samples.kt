@@ -26,6 +26,7 @@ import app.toque.companion.ui.screens.JournalState
 import app.toque.companion.ui.screens.LastActivity
 import app.toque.companion.ui.screens.MainState
 import app.toque.companion.ui.screens.ManuelState
+import app.toque.companion.ui.screens.MonReglageState
 import app.toque.companion.ui.screens.NowBar
 import app.toque.companion.ui.screens.PauseCause
 import app.toque.companion.ui.screens.PairMethod
@@ -304,6 +305,10 @@ object Samples {
         version = "0.7.0",
         pairMethod = PairMethod.QR,
         pairedOn = "21 novembre",
+        // Ce téléphone, sous son nom par défaut, chez un robot qui le laisse se renommer.
+        phoneName = tr("Téléphone %d", 1),
+        phoneDefault = tr("Téléphone %d", 1),
+        canRename = true,
         alerts = setOf(AlertKind.WAITING, AlertKind.STEP_END, AlertKind.PAUSE, AlertKind.TEMP),
         languages = listOf("fr" to "Français", "ca" to "Català", "de" to "Deutsch", "en" to "English", "es" to "Español", "uk" to "Українська"),
         update = app.toque.companion.update.UpdateView(installed = "0.5.0", phase = app.toque.companion.update.UpdatePhase.UP_TO_DATE, version = "0.5.0"),
@@ -378,6 +383,40 @@ object Samples {
         refused = "Étape 2 : En chauffe, vitesse 3 maximum", typed = true, settingRefused = true,
         settingNote = tr("Nouveau réglage : à confirmer une fois sur le robot avant le premier lancement"))
 
+    /**
+     * Fiche d'une recette Mealie chez un robot qui prend le réglage du propriétaire depuis le téléphone : l'étape 2
+     * porte « Mon réglage » (tapé sur le robot), l'étape 3 un réglage envoyé du téléphone, à vérifier sur le robot.
+     */
+    fun ficheMealieReglages() = fiche().copy(personal = false, mealie = true, category = "Desserts", canWrite = true, canFavorite = true,
+        ownSettings = true, canOwn = true, stepCount = 4, steps = listOf(
+            FicheStep("Mettre la farine et le beurre dans le bol.", tr("À la main")),
+            FicheStep("Pétrir la pâte.", app.toque.core.recipes.StepSettings.default(app.toque.core.recipes.StepProgram.KNEAD).summary, own = "robot"),
+            FicheStep("Cuire les pommes en compote.", Fmt.cooking(10 * 60, 90, 1), own = "phone", review = true),
+            FicheStep("Mixer la compote.", Fmt.cooking(30, null, 6), review = true),
+        ))
+
+    /** « Mon réglage » de l'étape 3 : un réglage envoyé du téléphone, à vérifier sur le robot. */
+    fun monReglage() = MonReglageState(3, "Gâteau du verger", "Cuire les pommes en compote.", "10 min · 90 °C · vitesse 1", own = "phone",
+        review = true, recipeSetting = "8 min · 90 °C · vitesse 1")
+
+    /** La feuille ouverte sur la cuisson manuelle de l'étape, passée de la vitesse 1 à 2. */
+    fun monReglageFeuille(): MonReglageState {
+        val now = app.toque.core.recipes.StepMachine(app.toque.core.recipes.StepProgram.MANUAL, 600, 1, 90)
+        val c = app.toque.companion.flows.SettingChoice.start(connect, now).step(connect, "speed", 1)
+        return monReglage().copy(sheet = app.toque.companion.flows.SettingChoice.state(3, connect, c, now, now.summary, canRestore = false))
+    }
+
+    /** Étape sans réglage à soi, au réglage lu dans la recette (à vérifier). */
+    fun monReglageRecette() = MonReglageState(4, "Gâteau du verger", "Mixer la compote.", "30 s · vitesse 6", review = true)
+
+    /** Le réglage envoyé, refusé par le robot : son message, la rangée bordée. */
+    fun monReglageRefus() = monReglageRecette().copy(machine = "30 s · 90 °C · vitesse 6", refused = "Étape 4 : En chauffe, vitesse 3 maximum",
+        settingRefused = true)
+
+    /** Le texte de l'étape a changé sur le robot depuis la lecture de la fiche : relue, rien d'enregistré. */
+    fun monReglageChange() = monReglageRecette().copy(text = "Mixer la compote 1 min.",
+        refused = tr("La recette a changé sur le robot : relisez l'étape, puis choisissez de nouveau son réglage."))
+
     fun courses() = CoursesState(
         toBuy = listOf(
             CourseRow(1, "850 g de potimarron", "Velouté de potimarron · Gratin"),
@@ -408,6 +447,7 @@ object Samples {
         s.diagnostic.render(diagnostic())
         s.editeur.render(editeur())
         s.etape.render(etape())
+        s.reglage.render(monReglage())
         s.courses.render(courses())
     }
 }

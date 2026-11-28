@@ -15,6 +15,7 @@ import app.toque.companion.ui.EditActions
 import app.toque.companion.ui.Icon
 import app.toque.companion.ui.Navigator
 import app.toque.companion.ui.Screen
+import app.toque.companion.ui.SettingActions
 import app.toque.companion.ui.SegmentTabs
 import app.toque.companion.ui.Tab
 import app.toque.companion.ui.Ui
@@ -256,7 +257,7 @@ private class SheetCard(c: Context, val head: View, val middle: ScrollView, val 
 }
 
 /** La feuille « Réglage du robot » d'une étape, posée sur l'écran Étape. Toucher le fond la ferme sans rien changer. */
-private class SettingSheetView(c: Context, private val actions: EditActions) : FrameLayout(c) {
+internal class SettingSheetView(c: Context, private val actions: SettingActions) : FrameLayout(c) {
     private val title = Ui.text(c, tr("Réglage du robot"), 20f, Ui.TEXT, Ui.MEDIUM, lineHeight = 25f)
     // Les genres sur une ligne qui défile (onze sur le Smart) : les crans restent sous les yeux, même sur un petit téléphone.
     private val chips = ChipRow<String>(c) { actions.pickSetting(it) }
