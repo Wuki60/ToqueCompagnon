@@ -33,8 +33,18 @@ interface Navigator {
      */
     fun showLive(route: Route)
 
-    /** Retour : ferme l'écran du dessus, ou revient à « En direct ». false s'il n'y a plus rien à fermer. */
+    /**
+     * Retour demandé par l'utilisateur : l'écran affiché le traite d'abord ([Screen.onBack]), sinon l'écran
+     * du dessus se ferme, ou on revient à « En direct ». false s'il n'y a plus rien à fermer.
+     */
     fun back(): Boolean
+
+    /**
+     * Ferme [route] si c'est l'écran affiché, sans rien lui demander : pour un déroulement qui a décidé de
+     * fermer son écran (étape terminée, recette enregistrée, éditeur quitté). Pas [back] : l'écran, à qui
+     * [back] demande d'abord, demande souvent lui-même au déroulement de fermer, et ils s'appelleraient sans fin.
+     */
+    fun close(route: Route)
 
     /**
      * Appairage : tant que [visible], l'écran Appairage occupe tout l'écran, sans la barre
@@ -188,6 +198,14 @@ class Shell(c: Context) : LinearLayout(c), Navigator {
             return true
         }
         return false
+    }
+
+    override fun close(route: Route) {
+        if (current != route) return
+        val stack = stacks.getValue(tab)
+        if (stack.size <= 1) return
+        stack.removeAt(stack.size - 1)
+        refresh()
     }
 
     /** Affiche l'écran du haut de la pile de l'onglet courant. */

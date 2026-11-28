@@ -386,7 +386,7 @@ class EditFlow(
         if (refusedStep == i) clearProblem() else if (refusedStep > i) refusedStep--
         step = -1
         show()
-        if (nav.current == Route.ETAPE) nav.back()
+        nav.close(Route.ETAPE)
     }
 
     /** Retour de l'écran Étape : une étape ajoutée et laissée vide s'en va. */
@@ -399,7 +399,7 @@ class EditFlow(
             change { it.copy(steps = it.steps.filterIndexed { k, _ -> k != i }) }
             show()
         }
-        if (nav.current == Route.ETAPE) nav.back()
+        nav.close(Route.ETAPE)
     }
 
     // ------------------------------------------------------------------ réglage du robot (feuille)
@@ -480,8 +480,8 @@ class EditFlow(
     override fun leave() {
         choice = null
         flush()
-        if (nav.current == Route.ETAPE) nav.back()
-        if (nav.current == Route.EDITEUR) nav.back()
+        nav.close(Route.ETAPE)
+        nav.close(Route.EDITEUR)
     }
 
     // ------------------------------------------------------------------ enregistrer sur le robot
@@ -529,8 +529,8 @@ class EditFlow(
         dirty = false
         notice(tr("Recette enregistrée sur le robot"))
         show()
-        if (nav.current == Route.ETAPE) nav.back()
-        if (nav.current == Route.EDITEUR) nav.back()
+        nav.close(Route.ETAPE)
+        nav.close(Route.EDITEUR)
         onSaved(e.id, true)
     }
 

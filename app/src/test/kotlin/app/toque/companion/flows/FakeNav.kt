@@ -45,5 +45,9 @@ class FakeNav : Navigator {
         if (tab != Tab.LIVE) { tab = Tab.LIVE; return true }
         return false
     }
+    override fun close(route: Route) {
+        val s = stacks.getValue(tab)
+        if (current == route && s.size > 1) s.removeAt(s.size - 1)
+    }
     override fun showPairing(visible: Boolean) { pairing = visible }
 }
