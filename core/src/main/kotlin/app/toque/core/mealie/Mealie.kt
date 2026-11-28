@@ -149,7 +149,9 @@ object MealieRecipes {
         val text = if (head.isEmpty()) body else if (body.isEmpty()) head else "$head\n$body"
         if (text.isEmpty()) return@mapNotNull null
         val machine = StepText.propose(body, robot)
-        Step(text.take(4000), machine, needsReview = machine != null)
+        // « Ajouter 20 g d'huile » : une pesée (#137), seulement sur une étape sans réglage du robot.
+        val weigh = if (machine == null) StepText.weigh(body) else null
+        Step(text.take(4000), machine, weigh = weigh, needsReview = machine != null)
     }
 
     private fun notes(m: Map<String, Any?>): String {

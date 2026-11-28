@@ -26,6 +26,7 @@ import app.toque.companion.ui.screens.ProgramKind
 import app.toque.core.protocol.SmartProgram
 import app.toque.companion.ui.screens.ProgrammeState
 import app.toque.companion.ui.screens.ReposState
+import app.toque.companion.ui.screens.SuspendedRecipe
 import app.toque.companion.ui.screens.RepriseState
 import app.toque.companion.ui.screens.StepProgress
 import app.toque.companion.ui.screens.WeighItem
@@ -144,10 +145,11 @@ object LivePresenter {
         if (prep != null) return LiveView(Route.MANUEL, preparation(ctx, prep))
         val w = s.waiting
         if (w != null) return LiveView(Route.ATTENTE, AttenteState(link, w.title, ctx.clock(w.sentAt), w.stepCount, w.totalMinutes * 60,
-            bowlC(m), m.weightG, !m.lidOpen, bowlInPlace(s), servings = w.servings))
+            bowlC(m), scaleG(m), !m.lidOpen, bowlInPlace(s), servings = w.servings))
         val start = startPermission(s)
-        return LiveView(Route.REPOS, ReposState(link, bowlC(m), m.weightG, !m.lidOpen, bowlInPlace(s), s.last?.let { last(ctx, it) },
-            canStartManual = start.allowed && Pending.START !in i.pending, startManualReason = start.reason))
+        return LiveView(Route.REPOS, ReposState(link, bowlC(m), scaleG(m), !m.lidOpen, bowlInPlace(s), s.last?.let { last(ctx, it) },
+            canStartManual = start.allowed && Pending.START !in i.pending, startManualReason = start.reason,
+            suspended = s.suspendedSession?.let { SuspendedRecipe(it.title, it.current + 1, it.stepCount) }))
     }
 
     /** Lancement d'une cuisson manuelle : la permission du robot ; un robot plus ancien ne la connaît pas. */
@@ -504,6 +506,12 @@ object LivePresenter {
      * (`tempKnown` faux : le Smart hors chauffe). Les contrôles de sécurité gardent `tempC` et `hot`.
      */
     fun bowlC(m: MachineWire): Int? = if (m.tempKnown) m.tempC else null
+
+    /**
+     * Poids affiché sur la balance : null (« — ») quand ce n'est pas une vraie pesée (`weightValid` faux : lame
+     * ou Turbo en marche, balance pas prête). Un robot plus ancien ne le dit pas : le poids, comme avant.
+     */
+    fun scaleG(m: MachineWire): Int? = if (m.weightValid) m.weightG else null
 
     private fun programme(ctx: Ctx, job: JobWire): ProgrammeState {
         val s = ctx.s

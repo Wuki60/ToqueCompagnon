@@ -310,7 +310,7 @@ object Samples {
         phoneDefault = tr("Téléphone %d", 1),
         canRename = true,
         alerts = setOf(AlertKind.WAITING, AlertKind.STEP_END, AlertKind.PAUSE, AlertKind.TEMP),
-        languages = listOf("fr" to "Français", "ca" to "Català", "de" to "Deutsch", "en" to "English", "es" to "Español", "uk" to "Українська"),
+        languages = listOf("fr" to "Français", "ca" to "Català", "de" to "Deutsch", "en" to "English", "es" to "Español", "pl" to "Polski", "uk" to "Українська"),
         update = app.toque.companion.update.UpdateView(installed = "0.5.0", phase = app.toque.companion.update.UpdatePhase.UP_TO_DATE, version = "0.5.0"),
     )
 

@@ -849,5 +849,10 @@
   "Réglage de la recette : %s": "Einstellung des Rezepts: %s",
   "La recette a changé sur le robot : relisez l'étape, puis choisissez de nouveau son réglage.": "Das Rezept hat sich auf dem Roboter geändert: Lesen Sie den Schritt erneut und wählen Sie seine Einstellung noch einmal.",
   "Étape %d : réglage de la recette": "Schritt %d: Einstellung des Rezepts",
-  "Réglage envoyé : à vérifier sur le robot": "Einstellung gesendet: am Roboter zu prüfen"
+  "Réglage envoyé : à vérifier sur le robot": "Einstellung gesendet: am Roboter zu prüfen",
+  "Lecture seule : ce téléphone suit le robot mais ne le commande pas. Pour lui rendre les commandes : sur le robot, Réglages, puis Téléphone.": "Nur lesen: Dieses Telefon verfolgt den Roboter, steuert ihn aber nicht. Um ihm die Steuerung zurückzugeben: am Roboter Einstellungen, dann Handy.",
+  "Recette à reprendre": "Rezept zum Fortsetzen",
+  "Étape %d sur %d : reprenez-la sur l'accueil du robot.": "Schritt %d von %d: Setzen Sie es auf dem Startbildschirm des Roboters fort.",
+  "Reprenez-la sur l'accueil du robot.": "Setzen Sie es auf dem Startbildschirm des Roboters fort.",
+  "Base en veille : touchez l'écran du robot pour la réveiller": "Sockel im Standby: Berühren Sie den Bildschirm des Roboters, um ihn zu wecken"
 }

@@ -184,6 +184,8 @@ class MachineController(
     private fun coldConfirmed(now: Long): Boolean =
         coldConfirmedEpoch == coldEpoch && now - coldConfirmedAtMs in 0..Limits.COLD_CONFIRM_MS
     private var tarePending = false
+    var standby = false
+        private set
 
     private val bowl = BowlScaleTracker(
         config = { config },
@@ -360,9 +362,11 @@ class MachineController(
     fun tick(): ByteArray {
         val now = clock.nowMs()
         if ((link == LinkState.READY || link == LinkState.ARMING) && now - latestAtMs > config.staleMs) {
-            setLink(LinkState.LOST)
-            if (job?.active == true || turboStartedAt != null)
-                raiseFault(FaultCode.COMM_LOST, tr("Plus de réponse de la base moteur : tout est arrêté"))
+            if (!standby || job?.active == true || turboStartedAt != null) {
+                setLink(LinkState.LOST)
+                if (job?.active == true || turboStartedAt != null)
+                    raiseFault(FaultCode.COMM_LOST, tr("Plus de réponse de la base moteur : tout est arrêté"))
+            }
         }
         updateTurbo(now)
         updateJob(now)
@@ -406,6 +410,8 @@ class MachineController(
     private fun desiredSetting(): Setting {
         if (fault != null || link != LinkState.READY) return stopSetting()
         if (turboStartedAt != null) return Programs.turboSetting()
+        if (standby && codec.supports(Operation.SLEEP) && job?.active != true && turboStartedAt == null)
+            return Setting(Operation.SLEEP, 0, 0, lastWire.direction)
         val j = job ?: return stopSetting()
         if (j.state != JobState.RUNNING || j.waitingStop != null) return stopSetting()
         val s = j.phase.setting
@@ -453,6 +459,12 @@ class MachineController(
 
     private fun baseChecks(now: Long): List<Violation> {
         val v = ArrayList<Violation>(2)
+        // Extinction totale : la base a coupé ses relais. Rien ne démarre (un téléphone, par exemple) tant que
+        // l'écran du robot ne l'a pas réveillée.
+        if (standby) {
+            v += Violation("standby", tr("Base en veille : touchez l'écran du robot pour la réveiller"))
+            return v
+        }
         val t = latest
         when {
             link == LinkState.OFFLINE -> v += Violation("offline", tr("Base moteur non connectée"))
@@ -647,6 +659,19 @@ class MachineController(
     private fun requestTare() {
         tarePending = true
         bowl.onTareRequested()
+    }
+
+    /**
+     * Extinction totale (#74) : la base coupe ses relais ([Operation.SLEEP]) tant que rien ne tourne. Refusée sans
+     * SLEEP (Smart) et pendant un programme ou Turbo ; pendant la veille, [baseChecks] refuse tout démarrage et
+     * l'absence de réponse de la base n'est pas une perte de liaison. Au réveil, elle a de nouveau
+     * [ControllerConfig.staleMs] pour répondre. Sans effet quand rien ne change (un écran qui se connecte).
+     */
+    fun setStandby(enabled: Boolean) {
+        if (enabled == standby) return
+        if (enabled && (!codec.supports(Operation.SLEEP) || job?.active == true || turboStartedAt != null)) return
+        standby = enabled
+        if (!enabled) latestAtMs = clock.nowMs()
     }
 
     fun acknowledgeFault(): Verdict {

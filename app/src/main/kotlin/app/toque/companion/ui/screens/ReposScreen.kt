@@ -23,7 +23,8 @@ import app.toque.core.i18n.tr
 data class ReposState(
     val link: Link = Link.CONNECTED,
     val bowlC: Int?,
-    val scaleG: Int,
+    /** Poids sur la balance, null : pas une vraie pesée en ce moment (affiché « — »). */
+    val scaleG: Int?,
     val lidClosed: Boolean,
     val bowlInPlace: Boolean,
     /** Dernière activité (ouvre le Journal), ou null. */
@@ -31,7 +32,12 @@ data class ReposState(
     /** « Cuisson manuelle » : le robot permet de la lancer d'ici ; sinon [startManualReason] sous le bouton. */
     val canStartManual: Boolean = true,
     val startManualReason: String = "",
+    /** Recette guidée quittée sans être finie, que le robot propose de reprendre sur son accueil, ou null. */
+    val suspended: SuspendedRecipe? = null,
 )
+
+/** Recette à reprendre sur le robot : son titre et l'étape où elle s'est arrêtée (comptée depuis 1). */
+data class SuspendedRecipe(val title: String, val step: Int, val stepCount: Int)
 
 /** Ligne « Dernière activité » : titre et détail (« Recette terminée à 12:41 · 36 min »). */
 data class LastActivity(val title: String, val detail: String)
@@ -46,6 +52,10 @@ class ReposScreen(c: Context, private val actions: LiveActions, private val nav:
     private val lastDetail = Ui.ellipsize(Ui.text(c, "", 13f, Ui.TEXT2), 2)
     private lateinit var manual: Ui.Button
     private val manualReason = Ui.text(c, "", 13f, Ui.TEXT2, lineHeight = 18f).apply { gravity = Gravity.CENTER }
+    private val suspendedTitle = Ui.overline(c)
+    private val suspendedRow = Ui.horizontal(c)
+    private val suspendedName = Ui.ellipsize(Ui.text(c, "", 15f, Ui.TEXT, Ui.MEDIUM))
+    private val suspendedDetail = Ui.ellipsize(Ui.text(c, "", 13f, Ui.TEXT2), 3)
 
     override fun build(): View {
         page = LivePage(c)
@@ -73,6 +83,18 @@ class ReposScreen(c: Context, private val actions: LiveActions, private val nav:
         card.addView(manualReason, Ui.lp(t = 6))
         page.body.addView(card, Ui.lp(l = 20, t = 12, r = 20))
 
+        // Recette quittée sans être finie : elle se reprend sur l'accueil du robot (rien à toucher ici).
+        suspendedTitle.text = tr("Recette à reprendre")
+        page.body.addView(suspendedTitle, Ui.lp(l = 20, t = 18, r = 20))
+        suspendedRow.background = Ui.round(Ui.SURFACE, 20f)
+        Ui.pad(suspendedRow, 14, 14, 14, 14)
+        suspendedRow.addView(IconBadge(c, Icon.Kind.PAUSE), LinearLayout.LayoutParams(Ui.dp(36), Ui.dp(36)).apply { rightMargin = Ui.dp(12) })
+        val suspendedCol = Ui.vertical(c)
+        suspendedCol.addView(suspendedName)
+        suspendedCol.addView(suspendedDetail, Ui.lp(t = 1))
+        suspendedRow.addView(suspendedCol, Ui.lp(0, Ui.WRAP, 1f))
+        page.body.addView(suspendedRow, Ui.lp(l = 20, t = 10, r = 20))
+
         page.body.addView(tiles, Ui.lp(l = 20, t = 12, r = 20))
 
         lastTitle.text = tr("Dernière activité")
@@ -98,6 +120,14 @@ class ReposScreen(c: Context, private val actions: LiveActions, private val nav:
         Ui.setButtonEnabled(manual, s.canStartManual)
         Ui.show(manualReason, !s.canStartManual && s.startManualReason.isNotEmpty())
         Ui.set(manualReason, s.startManualReason)
+        val sus = s.suspended
+        Ui.show(suspendedTitle, sus != null)
+        Ui.show(suspendedRow, sus != null)
+        if (sus != null) {
+            Ui.set(suspendedName, sus.title)
+            Ui.set(suspendedDetail, if (sus.stepCount > 0) tr("Étape %d sur %d : reprenez-la sur l'accueil du robot.", sus.step, sus.stepCount)
+                else tr("Reprenez-la sur l'accueil du robot."))
+        }
         val last = s.last
         Ui.show(lastTitle, last != null)
         Ui.show(lastRow, last != null)

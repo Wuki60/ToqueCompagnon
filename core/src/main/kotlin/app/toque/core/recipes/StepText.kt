@@ -33,7 +33,7 @@ object StepText {
     private val SOFT = Regex("\\b(?:mijotage|sanftruhrstufe|velocidad\\s+cuchara|velocitat\\s+cullera|speed\\s*soft|soft\\s*speed)\\b|/\\s*soft\\b|\\bsoft\\s*/")
     private val TEMPERATURE = Regex("(\\d{2,3})(?:\\s*(?:-|–|a|to|bis)\\s*\\d{2,3})?\\s*(?:°\\s*c?|degres?(?:\\s*c)?\\b|degrees?\\b|grad\\b|grados\\b|graus\\b|gradi\\b)")
     private val FAHRENHEIT = Regex("\\d\\s*°\\s*f\\b|\\bfahrenheit\\b")
-    private val REVERSE = Regex("\\b(?:sens\\s+inverse|inverse|reverse|linkslauf|gegenlauf|giro\\s+a\\s+la\\s+izquierda|giro\\s+inverso|gir\\s+a\\s+l'esquerra|gir\\s+invers|antihoraire|counter-?clockwise|anti-?clockwise|antiorario)\\b|[⟲↺]")
+    private val REVERSE = Regex("\\b(?:sens\\s+inverse|inverse|reverse|linkslauf|gegenlauf|giro\\s+a\\s+la\\s+izquierda|giro\\s+inverso|gir\\s+a\\s+l'esquerra|gir\\s+invers|antihoraire|counter-?clockwise|anti-?clockwise|antiorario|ccw)\\b|[⟲↺↶]")
     private val WHISK = Regex("\\b(?:fouet|whisk|butterfly|ruhraufsatz|ruehraufsatz|schmetterling|mariposa|papallona|farfalla)\\b")
     /** « retirer le fouet », « remove the butterfly » : dans la même phrase, on ne sait plus. */
     private val REMOVE = Regex("\\b(?:retirer|retirez|enlever|enlevez|oter|otez|sans|remove|without|take\\s+out|entfernen|abnehmen|ohne|quitar|retirar|sin|treure|traieu|sense|togliere|senza)\\b")
@@ -110,6 +110,42 @@ object StepText {
             null
         }
     }
+
+    /**
+     * La pesée écrite dans [text] (#137) : « Ajouter 20 g d'huile d'olive » donne une étape « Pesez 20 g » avec la
+     * balance. Prudent comme le reste : une seule quantité en grammes (ou kilos) dans toute l'étape, juste après un
+     * verbe qui met quelque chose dans le bol (ajouter, verser, mettre, incorporer, add, put, zugeben, añadir,
+     * afegir, aggiungere…), sans fourchette, de 1 g à 3 kg ; null sinon. Le nom de ce qu'on pèse est ce qui suit la
+     * quantité dans la phrase. Une pesée ne fait tourner aucun moteur. Pas « pour » : en français, « pour 500 g de
+     * pâte » ne demande pas de peser.
+     */
+    fun weigh(text: String): Weigh? {
+        val t = text.replace('’', '\'').replace(' ', ' ').replace(' ', ' ')
+        val all = GRAMS.findAll(t).toList()
+        if (all.size != 1) return null
+        val q = all[0]
+        val before = t.substring(0, q.range.first)
+        if (RANGE_BEFORE.containsMatchIn(before)) return null
+        // Le verbe dans la même phrase, au plus 40 caractères avant la quantité.
+        val verb = ADD.findAll(before).lastOrNull() ?: return null
+        val between = before.substring(verb.range.last + 1)
+        if (between.length > 40 || SENTENCE_END.containsMatchIn(between)) return null
+        val value = q.groupValues[1].replace(',', '.').toDoubleOrNull() ?: return null
+        val grams = Math.round(if (KILO.matches(q.groupValues[2].lowercase())) value * 1000 else value).toInt()
+        if (grams !in 1..3000) return null
+        val rest = SENTENCE_END.split(t.substring(q.range.last + 1), 2)[0]
+        val name = NAME_END.split(OF.replace(rest.trim(), ""), 2)[0].trim().trimEnd(',', ':').take(40).trim()
+        return Weigh(name, grams)
+    }
+
+    private val ADD = Regex("(?i)(?<![\\p{L}])(?:ajout\\p{L}*|vers\\p{L}*|mett\\p{L}*|incorpor\\p{L}*|add|adding|put|zugeben|gib|geben|hinzuf\\p{L}*|a[nñ]ad\\p{L}*|ech\\p{L}*|afeg\\p{L}*|abo[cq]\\p{L}*|aggiung\\p{L}*|vers[ai]\\p{L}*)(?![\\p{L}])")
+    private val GRAMS = Regex("(?i)(?<![\\d.,])(\\d+(?:[.,]\\d+)?)\\s*(kg|kilos?|kilogrammes?|kilograms?|kilogramm|g|gr|grammes?|grams?|gramm|gramos|grams|grammi)(?![\\p{L}\\d])")
+    private val KILO = Regex("kg|kilos?|kilogrammes?|kilograms?|kilogramm")
+    private val RANGE_BEFORE = Regex("(?i)\\d\\s*(?:-|–|—|à|a|to|bis|ou|or)\\s*$")
+    private val SENTENCE_END = Regex("[.!?;\\n(]|\\s(?:puis|ensuite|et|then|and|dann|und|luego|y|i|poi|e)\\s")
+    /** Ce qui suit le nom : « dans le bol », « into the bowl », « im Mixtopf »… */
+    private val NAME_END = Regex("(?i)[,:]|\\s(?:dans|au|sur|in|into|on|onto|im|ins|en|al|nel|nella|sul|sulla)\\s")
+    private val OF = Regex("(?i)^(?:de\\s+la\\s+|de\\s+l'|de\\s+|des\\s+|du\\s+|d'|of\\s+|von\\s+|vom\\s+|del\\s+|di\\s+|della\\s+)")
 
     /** La seule durée de [clause] (fourchette : la plus petite), en secondes ; null s'il n'y en a pas exactement une. */
     private fun oneDuration(clause: String): Int? {

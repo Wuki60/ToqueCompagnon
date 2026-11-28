@@ -15,8 +15,10 @@ import app.toque.companion.flows.RecipePictures
 import app.toque.companion.link.FileLinkStore
 import app.toque.companion.link.FollowPacing
 import app.toque.companion.link.LocalNetwork
+import app.toque.companion.link.NsdFinder
 import app.toque.companion.link.RobotLink
 import app.toque.companion.live.LivePresenter
+import app.toque.core.companion.client.RobotFinder
 import app.toque.companion.ui.Ui
 import app.toque.companion.flows.LookStore
 import java.io.File
@@ -70,7 +72,10 @@ open class CompanionApp : Application() {
         pacing = FollowPacing(visible = { visible }, busy = { LivePresenter.keepFollowing(link.latest) },
             ownIpv4 = { LocalNetwork.ownIpv4() }, robotHost = { link.paired?.host }, elapsedMs = { SystemClock.elapsedRealtime() })
         // Appairage (jeton compris) dans le dossier jamais sauvegardé ni transféré.
+        // Le robot se cherche d'abord parmi ceux annoncés sur le Wi-Fi (mDNS), puis sur tout le /24 du téléphone.
+        val nsd = NsdFinder(this)
         link = RobotLink(FileLinkStore(File(noBackupFilesDir, "robot.json")), post = { main.post(it) },
+            candidates = { own -> if (own == null) emptyList() else (nsd.find() + RobotFinder.subnet(own)).distinct() },
             pacing = pacing, elapsedMs = { SystemClock.elapsedRealtime() }, onAnswer = { keepAwakeBriefly() }, log = { diag.add(it) })
         // Apparence du téléphone dès le départ (notification, premier écran).
         lookStore = PrefsLookStore(getSharedPreferences("apparence", MODE_PRIVATE))

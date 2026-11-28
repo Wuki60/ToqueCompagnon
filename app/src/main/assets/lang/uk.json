@@ -849,5 +849,10 @@
   "Réglage de la recette : %s": "Налаштування рецепта: %s",
   "La recette a changé sur le robot : relisez l'étape, puis choisissez de nouveau son réglage.": "Рецепт змінився на роботі: перечитайте крок і знову виберіть його налаштування.",
   "Étape %d : réglage de la recette": "Крок %d: налаштування рецепта",
-  "Réglage envoyé : à vérifier sur le robot": "Налаштування надіслано: перевірте на роботі"
+  "Réglage envoyé : à vérifier sur le robot": "Налаштування надіслано: перевірте на роботі",
+  "Lecture seule : ce téléphone suit le robot mais ne le commande pas. Pour lui rendre les commandes : sur le robot, Réglages, puis Téléphone.": "Лише перегляд: цей телефон стежить за роботом, але не керує ним. Щоб повернути йому керування: на роботі Параметри, потім Телефон.",
+  "Recette à reprendre": "Рецепт, який можна продовжити",
+  "Étape %d sur %d : reprenez-la sur l'accueil du robot.": "Крок %d з %d: продовжте його на головному екрані робота.",
+  "Reprenez-la sur l'accueil du robot.": "Продовжте його на головному екрані робота.",
+  "Base en veille : touchez l'écran du robot pour la réveiller": "База в режимі сну: торкніться екрана робота, щоб її розбудити"
 }

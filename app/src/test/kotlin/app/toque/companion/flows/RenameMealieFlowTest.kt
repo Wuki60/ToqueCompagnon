@@ -167,6 +167,26 @@ class RenameMealieFlowTest {
         onMain { flow.close() }
     }
 
+    /** Le robot met ce téléphone en lecture seule (Réglages › Téléphone) : l'onglet Robot le dit, et plus de « Renommer » refusé. */
+    @Test fun aReadOnlyPhoneIsToldOnTheRobotTab() {
+        val robot = robot()
+        val link = paired(robot)
+        var state: RobotState? = null
+        val flow = onMain { RobotFlow(link, switches, { state = it }) { _, _ -> } }
+        onMain { link.follow("test") }
+        eventually("état du robot") { state?.phoneName == "Téléphone 1" }
+        assertFalse(onMain { state!!.readOnly })
+
+        robot.hub.setPhoneReadOnly(robot.hub.pairing.list.single().id, true)
+        eventually("lecture seule") { state?.readOnly == true }
+        // Les commandes sont refusées par le robot : le téléphone les montre coupées, avec la raison du robot.
+        eventually("commandes coupées") { link.latest?.can?.start?.code == "read_only" }
+
+        robot.hub.setPhoneReadOnly(robot.hub.pairing.list.single().id, false)
+        eventually("commandes rendues") { state?.readOnly == false }
+        onMain { flow.close() }
+    }
+
     @Test fun aRefusalIsShownAndTheNameStays() {
         val robot = robot()
         val link = paired(robot, relay(robot, refuseRename = true))

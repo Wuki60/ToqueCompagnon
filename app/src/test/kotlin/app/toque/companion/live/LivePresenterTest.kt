@@ -64,6 +64,24 @@ class LivePresenterTest {
         assertNull(v.etapes)
     }
 
+    /** Une recette guidée quittée sans être finie : l'accueil du robot propose « Reprendre », le téléphone le dit. */
+    @Test fun aSuspendedRecipeIsShownOnTheRestingScreen() {
+        val s0 = present(input(state())).screen as ReposState
+        assertNull(s0.suspended)
+        val v = present(input(WireFixtures.wire(state().copy(suspendedSession = session(3, "nothing"))))).screen as ReposState
+        assertEquals("Velouté de potimarron", v.suspended!!.title)
+        assertEquals(4, v.suspended!!.step)
+        assertEquals(6, v.suspended!!.stepCount)
+    }
+
+    /** Lame en marche ou balance pas prête : le poids n'est pas une pesée, la balance montre « — ». */
+    @Test fun aWeightThatIsNotAWeighingIsNotShown() {
+        val ok = present(input(state(machine = ready.copy(weightG = 372)))).screen as ReposState
+        assertEquals(372, ok.scaleG)
+        val not = present(input(state(machine = ready.copy(weightG = 0, weightValid = false)))).screen as ReposState
+        assertNull(not.scaleG)
+    }
+
     @Test fun anOlderRobotWithoutClearKeepsTheRestingScreenAfterAnEnd() {
         val j = job(state = "ABORTED", endReason = "Arrêté")
         val v = present(input(state(job = j, can = WireFixtures.olderRobot(WireFixtures.can(j)), last = ActivityWire(1, "manual",

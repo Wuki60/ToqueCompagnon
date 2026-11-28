@@ -28,6 +28,7 @@ par-dessus l'ancienne, sans rien perdre.
 - Une **notification** quand le robot a besoin de vous : pesée, étape à la main, fin d'une étape ou de
   la cuisson, pause, couvercle ouvert, température atteinte. Elles arrivent **même appli fermée**
   pendant une cuisson, puis l'appli s'arrête toute seule.
+- Une recette guidée quittée sans être finie s'affiche au repos : on la reprend sur l'accueil du robot.
 
 ### Piloter, dans des limites
 - Pause, arrêt, reprise, tare de la balance.
@@ -41,6 +42,10 @@ par-dessus l'ancienne, sans rien perdre.
 - Choisir le nombre de personnes : les quantités s'adaptent.
 - Gérer ses favoris.
 - **Envoyer une recette au robot** : elle vous attend sur son écran d'accueil, prête à lancer.
+- Les recettes **Mealie** (auto-hébergées, reliées sur le robot) : une pastille, un filtre « Depuis
+  Mealie », et **son propre réglage du robot** pour une étape, gardé sur le robot à côté de la recette
+  (rien n'est copié), à vérifier une fois sur le robot avant son lancement.
+- Les programmes du robot, Yaourt compris sur le Connect.
 
 ### La liste de courses
 - Sur une recette, **« Ajouter à la liste »** met tous ses ingrédients dans la liste, aux quantités du
@@ -55,6 +60,10 @@ par-dessus l'ancienne, sans rien perdre.
 - Sur tablette ou à l'horizontale : un menu sur le côté et deux colonnes (la liste à gauche, la recette
   à droite).
 - Le même look que Toque : bleu nuit ou thème clair, les mêmes couleurs d'accent, les mêmes icônes.
+
+### L'onglet Robot
+- **Renommer ce téléphone** : le nom que le robot affiche dans sa liste et son journal.
+- Un téléphone mis en **lecture seule** par le robot le dit : il suit tout, ne commande rien.
 
 ## Sécurité
 
@@ -77,9 +86,11 @@ Le téléphone ne remplace pas le robot, il le complète.
 ## Ce qu'il faut
 
 - Un téléphone ou une tablette **Android 8** ou plus récent.
-- Un robot Monsieur Cuisine **Connect** ou **Smart** (en test) avec [Toque](https://github.com/Wuki60/MrCuisineVibeConnect) 0.10.0 ou plus récent.
+- Un robot Monsieur Cuisine **Connect** ou **Smart** (en test) avec [Toque](https://github.com/Wuki60/MrCuisineVibeConnect) 0.10.0 ou plus récent
+  (Toque 0.13.0 pour tout ce qui précède : renommer le téléphone, Mealie, lecture seule).
   Sur le Smart, l'appli montre aussi ses programmes (Mixer, Sous-vide, Mijoter…).
-- Le téléphone et le robot sur le **même réseau Wi-Fi**.
+- Le téléphone et le robot sur le **même réseau Wi-Fi**. L'appli retrouve le robot toute seule, même
+  quand son adresse change (le robot s'annonce sur le Wi-Fi, et le téléphone cherche aussi sur son réseau).
 
 ## Langues
 
@@ -92,7 +103,7 @@ L'appli se traduit **avec le même système que Toque** : les textes sont écrit
 
 - `en.json` doit être complet ; les autres langues peuvent avoir des manques (le texte reste alors en
   français), mais aucun texte inconnu et les mêmes `%s` / `%d`. Un test le vérifie.
-- Langues disponibles : français, anglais, allemand, espagnol, catalan et ukrainien, comme Toque. Par
+- Langues disponibles : français, anglais, allemand, espagnol, catalan, ukrainien et polonais, comme Toque. Par
   défaut l'appli suit la langue du téléphone ; on la change dans **Robot › Langue · Language**.
 
 ## Compiler

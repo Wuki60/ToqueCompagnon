@@ -849,5 +849,10 @@
   "Réglage de la recette : %s": "Ajuste de la receta: %s",
   "La recette a changé sur le robot : relisez l'étape, puis choisissez de nouveau son réglage.": "La receta ha cambiado en el robot: vuelva a leer el paso y elija de nuevo su ajuste.",
   "Étape %d : réglage de la recette": "Paso %d: ajuste de la receta",
-  "Réglage envoyé : à vérifier sur le robot": "Ajuste enviado: por comprobar en el robot"
+  "Réglage envoyé : à vérifier sur le robot": "Ajuste enviado: por comprobar en el robot",
+  "Lecture seule : ce téléphone suit le robot mais ne le commande pas. Pour lui rendre les commandes : sur le robot, Réglages, puis Téléphone.": "Solo lectura: este teléfono sigue al robot, pero no lo controla. Para devolverle el control: en el robot, Ajustes y luego Teléfono.",
+  "Recette à reprendre": "Receta por reanudar",
+  "Étape %d sur %d : reprenez-la sur l'accueil du robot.": "Paso %d de %d: reanúdela desde el inicio del robot.",
+  "Reprenez-la sur l'accueil du robot.": "Reanúdela desde el inicio del robot.",
+  "Base en veille : touchez l'écran du robot pour la réveiller": "Base en reposo: toque la pantalla del robot para despertarla"
 }

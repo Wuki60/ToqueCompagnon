@@ -27,8 +27,8 @@ android {
         applicationId = "app.toque.companion"
         minSdk = 26
         targetSdk = 34
-        versionCode = 16
-        versionName = "0.5.1"
+        versionCode = 17
+        versionName = "0.6.0"
     }
 
     signingConfigs {

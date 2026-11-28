@@ -41,6 +41,7 @@ import app.toque.companion.ui.screens.MonReglageState
 import app.toque.companion.ui.screens.PairingError
 import app.toque.companion.ui.screens.PauseCause
 import app.toque.companion.ui.screens.RecettesState
+import app.toque.companion.ui.screens.SuspendedRecipe
 import app.toque.companion.ui.screens.SendStatus
 import app.toque.core.i18n.I18n
 import app.toque.core.look.ColourWheel
@@ -102,6 +103,10 @@ class ScreenshotTest {
         Shot("Repos", Route.REPOS),
         // Smart au repos : température non mesurée, « — » et pourquoi.
         Shot("ReposSmart", Route.REPOS) { s, _ -> s.repos.render(Samples.repos().copy(bowlC = null)) },
+        // Une recette quittée sans être finie, à reprendre sur le robot ; lame en marche : pas de poids affiché.
+        Shot("ReposReprendre", Route.REPOS) { s, _ ->
+            s.repos.render(Samples.repos().copy(scaleG = null, suspended = SuspendedRecipe("Velouté de potimarron", 4, 6)))
+        },
         Shot("Attente", Route.ATTENTE),
         Shot("Fin", Route.FIN),
         // Titres longs : points de suspension, rien ne déborde.
@@ -184,6 +189,8 @@ class ScreenshotTest {
         Shot("JournalVide", Route.JOURNAL) { s, _ -> s.journal.render(JournalState()) },
         Shot("Robot", Route.ROBOT),
         Shot("RobotOublier", Route.ROBOT) { _, root -> click(root, "Oublier", "Forget") },
+        // Ce téléphone mis en lecture seule sur le robot.
+        Shot("RobotLectureSeule", Route.ROBOT) { s, _ -> s.robot.render(Samples.robot().copy(readOnly = true)) },
         // Ce téléphone renommé (nom le plus long que le robot garde), et la feuille « Renommer » : vide, puis préremplie.
         Shot("RobotNomLong", Route.ROBOT) { s, _ ->
             s.robot.render(Samples.robot().copy(phoneName = "Le téléphone de la cuisi", phoneLabel = "Le téléphone de la cuisi"))
@@ -391,6 +398,12 @@ class ScreenshotTest {
     /** Ukrainien : textes plus longs, autre alphabet. */
     @Test fun ukrainian() = capture("w390dp-h844dp-port-xhdpi", 1f, "-uk", language = "uk", only = UK_SHOTS)
 
+    /** Polonais (Toque Compagnon 0.6.0) : les mêmes écrans, et ceux de « Renommer » et de Mealie. */
+    @Test fun polish() {
+        capture("w390dp-h844dp-port-xhdpi", 1f, "-pl", language = "pl", only = UK_SHOTS + RENAME_MEALIE_SHOTS)
+        capture("w360dp-h640dp-port-xhdpi", 1.3f, "-pl-360x640-font130", language = "pl", only = UK_SHOTS)
+    }
+
     /** Tablette : menu des onglets sur le côté, écran centré ; catalogue à gauche de la fiche. */
     /**
      * Renommer ce téléphone et les recettes Mealie dans chaque langue de l'appli (l'anglais et le français ont
@@ -440,7 +453,7 @@ class ScreenshotTest {
     private val RENAME_MEALIE_SHOTS = setOf("Robot", "RobotNomLong", "RobotRenommer", "RobotRenommerNom", "RobotRenommerEnvoi",
         "FicheMealie", "FicheMealieMaVersion", "RecettesMealie", "FicheMealieReglages", "MonReglage", "MonReglageFeuille", "MonReglageRecette",
         "MonReglageRefus", "MonReglageChange")
-    private val UK_SHOTS = setOf("ProgrammeSmart", "Repos", "ReposSmart", "Main", "Etapes", "Pesee", "Pause", "Recettes", "Fiche", "Courses", "CoursesVide", "Robot", "RobotMiseAJour",
+    private val UK_SHOTS = setOf("ProgrammeSmart", "Repos", "ReposSmart", "ReposReprendre", "RobotLectureSeule", "Main", "Etapes", "Pesee", "Pause", "Recettes", "Fiche", "Courses", "CoursesVide", "Robot", "RobotMiseAJour",
         "Journal", "Appairage", "AppairageCode", "Editeur", "Manuel", "Programme")
 
     /** Écran « En direct » avec une cuisson en cours, catalogue, fiche, onglet Robot, éditeur, programme en cours, apparence. */

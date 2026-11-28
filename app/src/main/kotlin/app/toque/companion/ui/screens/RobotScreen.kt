@@ -64,6 +64,8 @@ data class RobotState(
     val canRename: Boolean = false,
     /** Nouveau nom en route vers le robot. */
     val renaming: Boolean = false,
+    /** Le robot a mis ce téléphone en lecture seule (Réglages › Téléphone) : il suit tout, ne commande rien. */
+    val readOnly: Boolean = false,
     /** Lancer une cuisson manuelle d'ici : null = oui, sinon pourquoi non (« Coupé sur le robot »). */
     val manualStartOff: String? = null,
     /** Notifications permises, mais le canal d'une alerte allumée est bloqué ou silencieux dans Android. */
@@ -94,6 +96,9 @@ class RobotScreen(c: Context, private val actions: RobotActions, private val nav
     private lateinit var forget: Ui.Button
     private lateinit var rename: Ui.Button
     private lateinit var renameSheet: RenameSheet
+    /** Lecture seule : ce que ce téléphone peut encore faire, et où la retirer. */
+    private val readOnly = Ui.text(c, tr("Lecture seule : ce téléphone suit le robot mais ne le commande pas. Pour lui rendre les commandes : sur le robot, Réglages, puis Téléphone."),
+        13f, Ui.WARN, lineHeight = 18f)
     private val blocked = Ui.horizontal(c)
     private lateinit var blockedText: TextView
     private lateinit var blockedButton: Ui.Button
@@ -166,6 +171,8 @@ class RobotScreen(c: Context, private val actions: RobotActions, private val nav
         Ui.ellipsize(rename.label, 2)
         rename.visibility = View.GONE
         robot.addView(rename, Ui.lp(Ui.WRAP, Ui.WRAP, l = 56, t = 4))
+        readOnly.visibility = View.GONE
+        robot.addView(readOnly, Ui.lp(l = 56, t = 6))
         column.addView(robot, Ui.lp(l = 20, t = 12, r = 20))
 
         // Autorisations fixées par Toque : affichées, sans réglage.
@@ -404,6 +411,7 @@ class RobotScreen(c: Context, private val actions: RobotActions, private val nav
             PairMethod.CODE -> tr("Par code, le %s", s.pairedOn)
         })
         Ui.set(phoneTitle, s.phoneName.ifEmpty { tr("Téléphone appairé") })
+        Ui.show(readOnly, s.readOnly)
         Ui.show(rename, s.canRename)
         Ui.setButtonEnabled(rename, !s.renaming)
         Ui.set(rename.label, if (s.renaming) tr("Envoi…") else tr("Renommer"))

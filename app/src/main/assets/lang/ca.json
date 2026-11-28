@@ -849,5 +849,10 @@
   "Réglage de la recette : %s": "Ajust de la recepta: %s",
   "La recette a changé sur le robot : relisez l'étape, puis choisissez de nouveau son réglage.": "La recepta ha canviat al robot: torneu a llegir el pas i trieu-ne de nou l'ajust.",
   "Étape %d : réglage de la recette": "Pas %d: ajust de la recepta",
-  "Réglage envoyé : à vérifier sur le robot": "Ajust enviat: per comprovar al robot"
+  "Réglage envoyé : à vérifier sur le robot": "Ajust enviat: per comprovar al robot",
+  "Lecture seule : ce téléphone suit le robot mais ne le commande pas. Pour lui rendre les commandes : sur le robot, Réglages, puis Téléphone.": "Només lectura: aquest telèfon segueix el robot, però no el controla. Per tornar-li el control: al robot, Configuració i després Telèfon.",
+  "Recette à reprendre": "Recepta per reprendre",
+  "Étape %d sur %d : reprenez-la sur l'accueil du robot.": "Pas %d de %d: reprèn-la des de la pantalla d'inici del robot.",
+  "Reprenez-la sur l'accueil du robot.": "Reprèn-la des de la pantalla d'inici del robot.",
+  "Base en veille : touchez l'écran du robot pour la réveiller": "Base en repòs: toca la pantalla del robot per despertar-la"
 }

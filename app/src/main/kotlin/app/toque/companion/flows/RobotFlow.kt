@@ -106,6 +106,7 @@ class RobotFlow(
             phoneDefault = phoneDefaultName(me),
             canRename = s?.can?.renamePhone?.allowed == true && me != null,
             renaming = renaming,
+            readOnly = me?.readOnly == true,
             manualStartOff = manualStartOff(s),
             alertsMuted = background.alertsMuted(),
             background = background.enabled(),

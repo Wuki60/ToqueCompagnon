@@ -27,6 +27,7 @@ anything.
 - A **notification** when the robot needs you: weighing, a step done by hand, end of a step or of the
   cooking, pause, lid open, temperature reached. They arrive **even with the app closed** during a
   cook, then the app stops by itself.
+- A guided recipe left unfinished is shown at rest: resume it from the robot's home screen.
 
 ### Control, within limits
 - Pause, stop, resume, tare the scale.
@@ -40,6 +41,10 @@ anything.
 - Choose the number of servings: quantities follow.
 - Manage your favourites.
 - **Send a recipe to the robot**: it waits for you on its home screen, ready to start.
+- **Mealie** recipes (self-hosted, linked on the robot): a badge, a "From Mealie" filter, and **your own
+  robot setting** for a step, kept on the robot next to the recipe (nothing is copied), to check once on
+  the robot before it starts.
+- The robot's programs, Yoghurt included on the Connect.
 
 ### Shopping list
 - On a recipe, **"Add to list"** puts all its ingredients in the list, for the number of servings
@@ -53,6 +58,10 @@ anything.
 - On a tablet or in landscape: a side menu and two columns (the list on the left, the recipe on the
   right).
 - The same look as Toque: midnight blue or light theme, the same accent colours, the same icons.
+
+### Robot tab
+- **Rename this phone**: the name the robot shows in its list and its log.
+- A phone the robot set to **read-only** says so: it follows everything but controls nothing.
 
 ## Safety
 
@@ -75,9 +84,11 @@ The phone does not replace the robot, it complements it.
 ## Requirements
 
 - An **Android 8** or newer phone or tablet.
-- A Monsieur Cuisine **Connect** or **Smart** (in testing) robot running [Toque](https://github.com/Wuki60/MrCuisineVibeConnect) 0.10.0 or newer.
+- A Monsieur Cuisine **Connect** or **Smart** (in testing) robot running [Toque](https://github.com/Wuki60/MrCuisineVibeConnect) 0.10.0 or newer
+  (Toque 0.13.0 for everything above: renaming the phone, Mealie, read-only phones).
   On the Smart, the app also shows its programs (Mixer, Sous-vide, Slow cook…).
-- The phone and the robot on the **same Wi-Fi network**.
+- The phone and the robot on the **same Wi-Fi network**. The app finds the robot by itself, even when
+  its address changes (the robot announces itself on the Wi-Fi, and the phone also searches its network).
 
 ## Languages
 
@@ -90,7 +101,7 @@ The app is translated **with the same system as Toque**: texts are written in Fr
 
 - `en.json` must be complete; other languages may have gaps (the text then stays in French), but no
   unknown text and the same `%s` / `%d`. A test checks it.
-- Available in French, English, German, Spanish, Catalan and Ukrainian, like Toque. By default the app
+- Available in French, English, German, Spanish, Catalan, Ukrainian and Polish, like Toque. By default the app
   follows the phone's language; change it in **Robot › Langue · Language**.
 
 ## Building

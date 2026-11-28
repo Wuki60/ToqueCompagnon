@@ -26,7 +26,8 @@ data class AttenteState(
     /** Durée totale de la recette, en secondes. */
     val durationS: Int,
     val bowlC: Int?,
-    val scaleG: Int,
+    /** Poids sur la balance, null : pas une vraie pesée en ce moment (affiché « — »). */
+    val scaleG: Int?,
     val lidClosed: Boolean,
     val bowlInPlace: Boolean,
     /** Nombre de personnes choisi sur le robot (0 : la recette n'en indique pas). */

@@ -849,5 +849,10 @@
   "Réglage de la recette : %s": "Recipe's setting: %s",
   "La recette a changé sur le robot : relisez l'étape, puis choisissez de nouveau son réglage.": "The recipe has changed on the robot: read the step again, then choose its setting again.",
   "Étape %d : réglage de la recette": "Step %d: recipe's setting",
-  "Réglage envoyé : à vérifier sur le robot": "Setting sent: to check on the robot"
+  "Réglage envoyé : à vérifier sur le robot": "Setting sent: to check on the robot",
+  "Lecture seule : ce téléphone suit le robot mais ne le commande pas. Pour lui rendre les commandes : sur le robot, Réglages, puis Téléphone.": "Read-only: this phone follows the robot but does not control it. To give it control back: on the robot, Settings, then Phone.",
+  "Recette à reprendre": "Recipe to resume",
+  "Étape %d sur %d : reprenez-la sur l'accueil du robot.": "Step %d of %d: resume it from the robot's home screen.",
+  "Reprenez-la sur l'accueil du robot.": "Resume it from the robot's home screen.",
+  "Base en veille : touchez l'écran du robot pour la réveiller": "Base in standby: touch the robot's screen to wake it"
 }
