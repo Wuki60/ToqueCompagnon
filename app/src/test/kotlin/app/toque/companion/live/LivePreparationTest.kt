@@ -63,6 +63,15 @@ class LivePreparationTest {
         val hot = present(input(state(machine = ready.copy(tempC = 72, hot = true))).copy(prep = ManualSettings(speed = 5))).screen as ManuelState
         assertEquals("Contenu chaud : à lancer sur le robot", hot.hint)
         assertFalse(hot.canStart)
+        // Dès 55 °C, comme sur le robot, qui pose alors sa question du mixage à chaud ; pas seulement à 60 °C.
+        val warm = present(input(state(machine = ready.copy(tempC = 57))).copy(prep = ManualSettings(speed = 5))).screen as ManuelState
+        assertEquals("Contenu chaud : à lancer sur le robot", warm.hint)
+        assertFalse(warm.canStart)
+        val cooler = present(input(state(machine = ready.copy(tempC = 54))).copy(prep = ManualSettings(speed = 5))).screen as ManuelState
+        assertEquals("", cooler.hint)
+        assertTrue(cooler.canStart)
+        // À vitesse 3, rien à confirmer : le contenu chaud ne retient pas le lancement.
+        assertTrue((present(input(state(machine = ready.copy(tempC = 57))).copy(prep = ManualSettings(speed = 3))).screen as ManuelState).canStart)
         // Le robot refuse le lancement : sa raison, bouton grisé.
         val lid = present(input(state(machine = ready.copy(lidOpen = true), can = WireFixtures.can(null).copy(
             start = no("lid", "Fermez le couvercle sur le robot")))).copy(prep = ManualSettings())).screen as ManuelState

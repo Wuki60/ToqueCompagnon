@@ -19,6 +19,7 @@ import app.toque.core.companion.HttpHandler
 import app.toque.core.companion.HttpRequest
 import app.toque.core.companion.HttpResponse
 import app.toque.core.companion.HttpServer
+import app.toque.core.companion.PhoneWire
 import app.toque.core.json.Json
 import app.toque.core.recipes.RecipeChip
 import org.junit.After
@@ -118,6 +119,17 @@ class RenameMealieFlowTest {
 
     // ------------------------------------------------------------------ renommer ce téléphone
 
+    /** Le nom par défaut montré dans « Renommer » est celui du robot, écrit dans sa langue, pas dans celle du téléphone. */
+    @Test fun theDefaultNameIsTheRobotsOwn() {
+        // Un robot en allemand, un téléphone déjà nommé : le robot dit le nom qu'il lui rendrait.
+        assertEquals("Telefon 2", phoneDefaultName(PhoneWire(id = "a", number = 2, name = "Cuisine", label = "Cuisine", defaultName = "Telefon 2")))
+        // Sans nom donné, son nom est déjà celui-là.
+        assertEquals("Telefon 2", phoneDefaultName(PhoneWire(id = "a", number = 2, name = "Telefon 2")))
+        // Un robot plus ancien ne le dit pas pour un téléphone nommé : « Téléphone N », dans la langue d'ici.
+        assertEquals("Téléphone 2", phoneDefaultName(PhoneWire(id = "a", number = 2, name = "Cuisine", label = "Cuisine")))
+        assertEquals("", phoneDefaultName(null))
+    }
+
     @Test fun thisPhoneRenamesItselfFromTheRobotTab() {
         val robot = robot()
         val link = paired(robot)
@@ -136,6 +148,8 @@ class RenameMealieFlowTest {
         assertTrue(onMain { state!!.renaming })
         eventually("renommé") { state?.phoneName == "Cuisine de Léa" && state?.renaming == false }
         assertEquals("Cuisine de Léa", onMain { state!!.phoneLabel })
+        // Le nom qu'il reprendrait, tel que le robot le donne.
+        eventually("nom par défaut") { state?.phoneDefault == "Téléphone 1" }
         assertEquals("Cuisine de Léa", robot.hub.pairing.list.single().name)
         eventually("l'état du robot le porte") { link.latest?.me?.name == "Cuisine de Léa" }
         assertEquals("Cuisine de Léa", onMain { state!!.phoneName })

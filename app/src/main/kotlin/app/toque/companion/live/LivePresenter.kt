@@ -42,6 +42,7 @@ import app.toque.core.i18n.tr
 import app.toque.core.robot.RobotProfiles
 import app.toque.core.companion.Permission
 import app.toque.core.machine.Accessory
+import app.toque.core.machine.Limits
 import app.toque.core.machine.ManualSettings
 import app.toque.core.machine.Programs
 import app.toque.core.machine.SafetyPolicy
@@ -156,8 +157,17 @@ object LivePresenter {
         return Permission.no("update", tr("Mettez Toque à jour sur le robot"))
     }
 
-    /** Une cuisson manuelle réglable (une phase) ; le reste (Nettoyage, programmes) passe par Programme. */
-    fun isManual(job: JobWire) = job.kind == "MANUAL" && job.phaseCount <= 1
+    /** Une cuisson manuelle réglable (une phase) ; le reste (Nettoyage, Yaourt, programmes) passe par Programme. */
+    fun isManual(job: JobWire) = job.kind == "MANUAL" && job.phaseCount <= 1 && !isFerment(job)
+
+    /**
+     * Une fermentation (le programme Yaourt du Connect) : pour la base, une cuisson MANUAL d'une phase, lame à
+     * l'arrêt, tiède, qui dure des heures et ne se règle pas comme une cuisson manuelle. Le robot le dit
+     * ([JobWire.ferment]) ; un robot plus ancien ne le dit pas, mais c'est la seule cuisson MANUAL sans mélange
+     * qui dépasse la durée d'une cuisson manuelle.
+     */
+    fun isFerment(job: JobWire) = job.ferment ||
+        (job.kind == "MANUAL" && job.phaseCount <= 1 && job.speed == 0 && job.tempLevel > 0 && job.totalMs > Limits.MAX_MS_DEFAULT)
 
     /** Quelque chose est en cours sur le robot : une recette guidée ou un programme. */
     fun inProgress(s: StateWire?): Boolean = s != null && (s.session != null || s.job?.state in ACTIVE)
@@ -481,7 +491,7 @@ object LivePresenter {
         "KNEAD" -> ProgramKind.KNEAD
         "STEAM" -> ProgramKind.STEAM
         "TOAST" -> ProgramKind.TOAST
-        "MANUAL" -> ProgramKind.CLEAN
+        "MANUAL" -> if (isFerment(job)) ProgramKind.YOGURT else ProgramKind.CLEAN
         // Smart : un programme de l'appli d'origine (Mixer, Sous-vide…), reconnu à son nom.
         else -> ProgramKind.named(job.label) ?: ProgramKind.named(job.kindLabel)
     }
@@ -521,7 +531,8 @@ object LivePresenter {
      * Connect, et sur le Smart ceux de l'appli d'origine en plus, comme sur son écran Programmes.
      */
     fun robotPrograms(running: ProgramKind?, smart: Boolean = false): List<ProgramItem> {
-        val base = connectPrograms(running)
+        // Le Yaourt est un programme du Connect ; le Smart a son Fermenter.
+        val base = connectPrograms(running, yogurt = !smart)
         if (!smart) return base
         fun sec(p: SmartProgram) = Fmt.duration(p.defaultS)
         fun range(p: SmartProgram) = tr("%s · de %d à %d °C", sec(p), p.minCelsius, p.maxCelsius)
@@ -540,14 +551,14 @@ object LivePresenter {
         )
     }
 
-    private fun connectPrograms(running: ProgramKind?): List<ProgramItem> {
+    private fun connectPrograms(running: ProgramKind?, yogurt: Boolean): List<ProgramItem> {
         val knead = Programs.knead()
         val steam = Programs.steam()
         val toast = Programs.toast()
         val clean = Programs.clean()
         fun sec(ms: Long) = (ms / 1000).toInt()
         val cleanSpeeds = clean.phases.map { it.setting.speed }
-        return listOf(
+        return listOfNotNull(
             ProgramItem(ProgramKind.KNEAD, tr("Pétrir"),
                 tr("%s · sens alternés, vitesse %d", Fmt.duration(sec(knead.totalMs)), knead.phases.maxOf { it.setting.speed }),
                 running == ProgramKind.KNEAD),
@@ -557,11 +568,17 @@ object LivePresenter {
             ProgramItem(ProgramKind.TOAST, tr("Rissoler"),
                 tr("%s · %d °C, sens inverse", Fmt.duration(sec(toast.totalMs)), toast.phases[0].setting.temperatureC),
                 running == ProgramKind.TOAST),
+            if (!yogurt) null else ProgramItem(ProgramKind.YOGURT, tr("Yaourt"),
+                tr("%s · %d °C, lame à l'arrêt", Fmt.duration(YOGURT_DEFAULT_S), Programs.YOGURT_C),
+                running == ProgramKind.YOGURT),
             ProgramItem(ProgramKind.CLEAN, tr("Nettoyage"),
                 tr("%s · vitesse %d à %d", Fmt.duration(sec(clean.totalMs)), cleanSpeeds.minOrNull() ?: 0, cleanSpeeds.maxOrNull() ?: 0),
                 running == ProgramKind.CLEAN),
         )
     }
+
+    /** Durée proposée par le robot pour un yaourt (son écran Programmes) : 8 h, réglable de 6 à 12 h. */
+    private const val YOGURT_DEFAULT_S = 8 * 3600
 
     // ------------------------------------------------------------------ fin
 

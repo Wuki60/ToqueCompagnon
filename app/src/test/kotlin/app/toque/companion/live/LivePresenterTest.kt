@@ -78,6 +78,35 @@ class LivePresenterTest {
         assertNull(withRecipe.etapes!!.now)
     }
 
+    // ------------------------------------------------------------------ yaourt
+
+    /** Un yaourt est une cuisson MANUAL pour la base : le téléphone le montre comme un programme, sans ses réglages. */
+    @Test fun aYogurtIsShownAsAProgramNotAsAManualCooking() {
+        val yogurt = job(remainingMs = 7 * 3600_000L, totalMs = 8 * 3600_000L, speed = 0, tempC = 37, label = "Yaourt")
+        // Le robot le dit (ferment) ; un robot plus ancien ne le dit pas : reconnu à sa durée.
+        for (j in listOf(yogurt.copy(ferment = true), yogurt)) {
+            assertTrue(LivePresenter.isFerment(j))
+            assertFalse(LivePresenter.isManual(j))
+            val v = present(input(state(job = j, machine = ready.copy(tempC = 36))))
+            assertEquals(Route.PROGRAMME, v.route)
+            val p = v.screen as ProgrammeState
+            assertEquals("Yaourt", p.name)
+            assertEquals(listOf("37 °C", "Lame à l'arrêt"), p.tags)
+            assertEquals(listOf("Pétrir", "Vapeur", "Rissoler", "Yaourt", "Nettoyage"), p.programs.map { it.name })
+            assertEquals("Yaourt", p.programs.single { it.running }.name)
+            assertEquals("8 h 00 · 37 °C, lame à l'arrêt", p.programs.single { it.running }.detail)
+        }
+        // Tiède et sans mélange aussi, mais courte : une cuisson manuelle, avec ses réglages.
+        val warm = job(remainingMs = 20 * 60_000L, totalMs = 30 * 60_000L, speed = 0, tempC = 37)
+        assertFalse(LivePresenter.isFerment(warm))
+        assertEquals(Route.MANUEL, present(input(state(job = warm))).route)
+        // Une fermentation courte : seul le robot peut le dire.
+        assertEquals(Route.PROGRAMME, present(input(state(job = warm.copy(ferment = true, label = "Yaourt")))).route)
+        // Le Yaourt est un programme du Connect : le Smart a son Fermenter.
+        assertFalse(LivePresenter.robotPrograms(null, smart = true).any { it.kind == ProgramKind.YOGURT })
+        assertTrue(LivePresenter.robotPrograms(null, smart = true).any { it.kind == ProgramKind.FERMENT })
+    }
+
     // ------------------------------------------------------------------ fin d'un programme (OK)
 
     @Test fun aStoppedManualCookingShowsTheEndScreenLikeTheRobotBar() {
@@ -411,12 +440,13 @@ class LivePresenterTest {
         val p = v.screen as ProgrammeState
         assertEquals("Smoothie", p.name)
         assertEquals(listOf(ProgramKind.SMOOTHIE), p.programs.filter { it.running }.map { it.kind })
-        assertEquals(ProgramKind.values().toList(), p.programs.map { it.kind })
+        // Tous, sauf le Yaourt du Connect : le Smart a son Fermenter.
+        assertEquals(ProgramKind.values().filter { it != ProgramKind.YOGURT }, p.programs.map { it.kind })
         assertEquals("1 min · vitesse 10", p.programs.first { it.kind == ProgramKind.SMOOTHIE }.detail)
         assertEquals("6 h 00 · de 40 à 85 °C", p.programs.first { it.kind == ProgramKind.SOUS_VIDE }.detail)
-        // Le Connect garde ses quatre programmes.
+        // Le Connect garde ses cinq programmes (le Yaourt depuis Toque 0.11.0).
         val c = present(input(state(job = job(kind = "STEAM", label = "Vapeur", kindLabel = "Vapeur", totalMs = 1_200_000))))
-        assertEquals(4, (c.screen as ProgrammeState).programs.size)
+        assertEquals(5, (c.screen as ProgrammeState).programs.size)
     }
 
     /** Le Smart est reconnu à robot.model seul (Toque 0.10.0) : plus par son nom ni par ses limites. */
@@ -433,8 +463,9 @@ class LivePresenterTest {
             limits = WireFixtures.limits.copy(heatNoStir = false))
         assertFalse(LivePresenter.isSmart(lookalike))
         val steam = job(kind = "STEAM", label = "Vapeur", kindLabel = "Vapeur", totalMs = 1_200_000)
-        assertEquals(4, (present(input(lookalike.copy(job = steam))).screen as ProgrammeState).programs.size)
-        assertEquals(ProgramKind.values().size, (present(input(smart.copy(job = steam))).screen as ProgrammeState).programs.size)
+        // Connect : ses cinq programmes ; Smart : tous sauf le Yaourt, propre au Connect.
+        assertEquals(5, (present(input(lookalike.copy(job = steam))).screen as ProgrammeState).programs.size)
+        assertEquals(ProgramKind.values().size - 1, (present(input(smart.copy(job = steam))).screen as ProgrammeState).programs.size)
     }
 
     /**
@@ -477,7 +508,7 @@ class LivePresenterTest {
         assertEquals(listOf(ProgramKind.STEAM), p.programs.filter { it.running }.map { it.kind })
         // Les programmes décrits d'après leurs définitions du robot.
         assertEquals(listOf("45 s · sens alternés, vitesse 4", "20 min · 120 °C, lame à l'arrêt",
-            "7 min · 130 °C, sens inverse", "1 min 30 · vitesse 4 à 10"), p.programs.map { it.detail })
+            "7 min · 130 °C, sens inverse", "8 h 00 · 37 °C, lame à l'arrêt", "1 min 30 · vitesse 4 à 10"), p.programs.map { it.detail })
 
         val clean = job(kind = "MANUAL", label = "Nettoyage", phaseCount = 4, speed = 4, tempC = 0, remainingMs = 60_000, totalMs = 90_000)
         val c = present(input(state(job = clean)))
