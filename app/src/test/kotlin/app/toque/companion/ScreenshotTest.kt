@@ -359,6 +359,12 @@ class ScreenshotTest {
     /** Téléphone à l'horizontale : comme une tablette, en moins haut. */
     @Test fun phoneLandscape() = capture("w844dp-h390dp-land-xhdpi", 1f, "-paysage", only = WIDE_SHOTS, wide = true)
 
+    /**
+     * Le même sous la barre d'état et celle des gestes : un Galaxy S23 Ultra fait 384 dp de haut, il en
+     * reste environ 336 à l'appli. Le menu sur le côté y tient en entier (son dernier onglet était coupé).
+     */
+    @Test fun phoneLandscapeUnderSystemBars() = capture("w800dp-h336dp-land-xhdpi", 1f, "-paysage-336", only = WIDE_SHOTS, wide = true)
+
     /** Tous les écrans en thème clair (orange) : rien du thème sombre n'y reste. */
     @Test fun lightTheme() = capture("w390dp-h844dp-port-xhdpi", 1f, "-clair", theme = "light")
 
