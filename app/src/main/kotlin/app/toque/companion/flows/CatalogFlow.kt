@@ -103,6 +103,10 @@ class CatalogFlow(
     private var writeSupported = false
     /** L'éditeur (Éditeur, Étape) : ouvert par « Écrire une recette », « Modifier », « Ma version ». */
     var editor: EditFlow? = null
+    /** Le robot prend le réglage du propriétaire d'une étape depuis le téléphone (state.can.ownSettings). */
+    private var ownSupported = false
+    /** « Mon réglage » d'une étape d'une recette reçue : ouvert depuis la fiche. */
+    var ownSteps: OwnStepFlow? = null
     private val unsubscribe = link.addListener(this)
 
     /** Fin de l'activité : un nombre de personnes pas encore envoyé part tout de suite (sans plus rien dessiner). */
@@ -360,7 +364,7 @@ class CatalogFlow(
 
     /** L'étoile telle qu'elle doit paraître : demande en route, et si le robot enregistre les favoris. */
     private fun decorate(f0: FicheState) = f0.copy(favorite = favPending[f0.id] ?: f0.favorite, canFavorite = favoritesSupported,
-        canWrite = writeSupported)
+        canWrite = writeSupported, canOwn = ownSupported)
 
     // ------------------------------------------------------------------ recettes écrites ici
 
@@ -374,6 +378,24 @@ class CatalogFlow(
 
     override fun myVersion(id: String) {
         if (writeSupported) editor?.startCopy(id)
+    }
+
+    /**
+     * Étape [index] touchée sur la fiche : « Mon réglage » s'ouvre, avec l'empreinte de l'étape telle que la fiche
+     * l'a lue (le robot refusera si elle a changé depuis). Rien chez un robot qui ne le permet pas.
+     */
+    override fun openOwnStep(id: String, index: Int) {
+        val f = fiche?.takeIf { it.id == id && it.stepsTappable } ?: return
+        val d = detail?.takeIf { it.id == id && it.ownSettings } ?: return
+        val key = d.steps.getOrNull(index)?.key?.takeIf { it.isNotEmpty() } ?: return
+        ownSteps?.open(id, index, key, f.title)
+    }
+
+    /** Un réglage d'étape de la recette [id] a changé sur le robot (depuis ce téléphone) : sa fiche se relit, sans s'afficher. */
+    fun ownStepChanged(id: String) {
+        bases.remove(id)
+        val f = fiche
+        if (f != null && f.id == id) openRecipe(id, navigate = false)
     }
 
     /**
@@ -613,9 +635,11 @@ class CatalogFlow(
         clock.observe(state)
         val fav = state.can.favorite.allowed
         val write = state.can.editRecipes.allowed
-        if (fav != favoritesSupported || write != writeSupported) {
+        val own = state.can.ownSettings.allowed
+        if (fav != favoritesSupported || write != writeSupported || own != ownSupported) {
             favoritesSupported = fav
             writeSupported = write
+            ownSupported = own
             showFavorite()
         }
         track(state)
@@ -635,6 +659,7 @@ class CatalogFlow(
             sent = null
             favoritesSupported = false
             writeSupported = false
+            ownSupported = false
             favPending.clear()
             for (s in syncs.values) s.cancelTimer?.invoke()
             syncs.clear()
@@ -656,6 +681,8 @@ class CatalogFlow(
             id = d.id, title = d.title, personal = d.user, category = d.category, stepCount = d.steps.size, favorite = d.favorite,
             // D'où vient la recette (absent chez un robot plus ancien : ni Mealie ni communauté).
             mealie = d.mealie, community = d.community,
+            // Réglage du propriétaire par étape (absent chez un robot plus ancien : la fiche reste comme avant).
+            ownSettings = d.ownSettings,
             picture = d.hasImage, durationMin = d.totalMinutes.takeIf { it > 0 }, servings = d.servings.takeIf { it > 0 },
             servingUnit = d.servingUnit,
             // Réglage du nombre de personnes : seulement si le robot le propose (pas un robot plus ancien).
@@ -670,7 +697,7 @@ class CatalogFlow(
                     m != null -> m.summary
                     w != null -> tr("Pesée · %s", Fmt.grams(w.grams))
                     else -> tr("À la main")
-                })
+                }, own = st.own, review = st.needsReview && m != null)
             },
         )
 

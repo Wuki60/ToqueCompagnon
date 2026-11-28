@@ -832,5 +832,22 @@
   "Le nom que le robot donne à ce téléphone, dans sa liste et dans son journal.": "Der Name, den der Roboter diesem Telefon gibt, in seiner Liste und in seinem Protokoll.",
   "Nom du téléphone": "Name des Telefons",
   "Enregistrer": "Speichern",
-  "Laissez vide pour reprendre « %s ».": "Leer lassen, um wieder „%s“ zu verwenden."
+  "Laissez vide pour reprendre « %s ».": "Leer lassen, um wieder „%s“ zu verwenden.",
+  "Touchez une étape pour lui donner votre réglage du robot, sans copier la recette.": "Tippen Sie auf einen Schritt, um ihm Ihre eigene Einstellung zu geben, ohne das Rezept zu kopieren.",
+  "Mon réglage, à vérifier sur le robot": "Meine Einstellung, am Roboter zu prüfen",
+  "Mon réglage": "Meine Einstellung",
+  "Mon réglage pour l'étape %d": "Meine Einstellung für Schritt %d",
+  "Revenir au réglage de la recette": "Zurück zur Einstellung des Rezepts",
+  "Votre réglage reste sur le robot, à côté de la recette : rien n'est copié. Si le texte de cette étape change dans Mealie, il ne s'applique plus.": "Ihre Einstellung bleibt auf dem Roboter, neben dem Rezept: Nichts wird kopiert. Ändert sich der Text dieses Schritts in Mealie, gilt sie nicht mehr.",
+  "Lecture de l'étape sur le robot…": "Schritt wird vom Roboter gelesen…",
+  "Étape indisponible": "Schritt nicht verfügbar",
+  "Envoi au robot…": "Wird an den Roboter gesendet…",
+  "Votre réglage, envoyé du téléphone : à vérifier une fois sur le robot avant son lancement": "Ihre Einstellung, vom Telefon gesendet: vor dem Start einmal am Roboter prüfen",
+  "Votre réglage, gardé sur le robot": "Ihre Einstellung, auf dem Roboter gespeichert",
+  "Réglage lu dans la recette : à vérifier sur le robot avant le premier lancement": "Aus dem Rezept gelesene Einstellung: vor dem ersten Start am Roboter prüfen",
+  "Réglage de la recette": "Einstellung des Rezepts",
+  "Réglage de la recette : %s": "Einstellung des Rezepts: %s",
+  "La recette a changé sur le robot : relisez l'étape, puis choisissez de nouveau son réglage.": "Das Rezept hat sich auf dem Roboter geändert: Lesen Sie den Schritt erneut und wählen Sie seine Einstellung noch einmal.",
+  "Étape %d : réglage de la recette": "Schritt %d: Einstellung des Rezepts",
+  "Réglage envoyé : à vérifier sur le robot": "Einstellung gesendet: am Roboter zu prüfen"
 }

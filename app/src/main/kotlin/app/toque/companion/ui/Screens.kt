@@ -16,6 +16,7 @@ import app.toque.companion.ui.screens.FinScreen
 import app.toque.companion.ui.screens.JournalScreen
 import app.toque.companion.ui.screens.MainScreen
 import app.toque.companion.ui.screens.ManuelScreen
+import app.toque.companion.ui.screens.MonReglageScreen
 import app.toque.companion.ui.screens.PauseScreen
 import app.toque.companion.ui.screens.PeseeScreen
 import app.toque.companion.ui.screens.ProgrammeScreen
@@ -52,6 +53,8 @@ enum class Route(val tab: Tab, val root: Boolean = false, val fullScreen: Boolea
     /** Écrire ou modifier une de ses recettes, puis une de ses étapes. */
     EDITEUR(Tab.RECIPES),
     ETAPE(Tab.RECIPES),
+    /** « Mon réglage » d'une étape d'une recette reçue (Mealie), sans la copier. */
+    REGLAGE(Tab.RECIPES),
 
     /** La liste de courses, gardée sur le téléphone. */
     COURSES(Tab.SHOP, root = true),
@@ -85,6 +88,7 @@ class Screens(
     private val pairing: PairingActions = object : PairingActions {},
     private val edit: EditActions = object : EditActions {},
     private val coursesActions: CoursesActions = object : CoursesActions {},
+    private val ownStep: OwnStepActions = object : OwnStepActions {},
 ) {
     private val built = java.util.EnumMap<Route, Screen<*>>(Route::class.java)
     /** Écrans construits avec des couleurs qui ne sont plus celles de [Ui]. */
@@ -110,6 +114,7 @@ class Screens(
     val diagnostic get() = get(Route.DIAGNOSTIC) as DiagnosticScreen
     val editeur get() = get(Route.EDITEUR) as EditeurScreen
     val etape get() = get(Route.ETAPE) as EtapeScreen
+    val reglage get() = get(Route.REGLAGE) as MonReglageScreen
     val courses get() = get(Route.COURSES) as CoursesScreen
 
     operator fun get(route: Route): Screen<*> = built.getOrPut(route) { create(route) }
@@ -135,6 +140,7 @@ class Screens(
         Route.DIAGNOSTIC -> DiagnosticScreen(c, nav)
         Route.EDITEUR -> EditeurScreen(c, edit, nav)
         Route.ETAPE -> EtapeScreen(c, edit, nav)
+        Route.REGLAGE -> MonReglageScreen(c, ownStep, nav)
         Route.COURSES -> CoursesScreen(c, coursesActions, nav)
     }
 

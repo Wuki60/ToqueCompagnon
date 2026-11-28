@@ -10,6 +10,7 @@ import app.toque.core.companion.EditorWire
 import app.toque.core.companion.FavoriteReply
 import app.toque.core.companion.RecipeEditRequest
 import app.toque.core.companion.JournalPage
+import app.toque.core.companion.OwnStepsWire
 import app.toque.core.companion.PairReply
 import app.toque.core.companion.PairingPayload
 import app.toque.core.companion.PhoneWire
@@ -23,6 +24,7 @@ import app.toque.core.companion.client.RobotFinder
 import app.toque.core.companion.client.RobotProofException
 import app.toque.core.companion.client.StateFollower
 import app.toque.core.i18n.tr
+import app.toque.core.recipes.StepMachine
 import java.io.IOException
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.ExecutorService
@@ -546,6 +548,11 @@ class RobotLink(
     fun editor(done: (Result<EditorWire>) -> Unit) = request(reads, { it.editor() }, done)
     /** « Ma version » d'une recette Lidl : la copie enregistrée sur le robot. */
     fun copyRecipe(id: String, done: (Result<EditableRecipe>) -> Unit) = request(commands, { it.copyRecipe(id) }, done)
+    /** Les étapes d'une recette qui prend le réglage du propriétaire (Mealie), et l'éditeur d'étape du robot. */
+    fun ownSteps(id: String, done: (Result<OwnStepsWire>) -> Unit) = request(reads, { it.ownSteps(id) }, done)
+    /** Le réglage [machine] (null : sans le robot) de l'étape [index] (empreinte [key]) ; [clear] : retour au réglage de la recette. */
+    fun setOwnStep(id: String, index: Int, key: String, machine: StepMachine?, clear: Boolean, done: (Result<OwnStepsWire>) -> Unit) =
+        request(commands, { if (clear) it.clearOwnStep(id, index, key) else it.setOwnStep(id, index, key, machine) }, done)
 
     private fun command(done: (CommandOutcome) -> Unit, call: (CompanionClient) -> CommandReply) =
         request(commands, call) { r -> done(r.fold({ CommandOutcome.of(it) }, { CommandOutcome.of(it) })) }

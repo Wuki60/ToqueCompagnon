@@ -37,6 +37,7 @@ import app.toque.companion.ui.screens.EditPhase
 import app.toque.companion.ui.screens.EditeurState
 import app.toque.companion.ui.screens.EtapeState
 import app.toque.companion.ui.screens.JournalState
+import app.toque.companion.ui.screens.MonReglageState
 import app.toque.companion.ui.screens.PairingError
 import app.toque.companion.ui.screens.PauseCause
 import app.toque.companion.ui.screens.RecettesState
@@ -320,6 +321,17 @@ class ScreenshotTest {
         Shot("EtapeReglageManuel", Route.ETAPE) { s, _ -> s.etape.render(Samples.etapeReglageManuel()) },
         Shot("EtapeReglageProgramme", Route.ETAPE) { s, _ -> s.etape.render(Samples.etapeReglageProgramme()) },
         Shot("EtapeReglageRefuse", Route.ETAPE) { s, _ -> s.etape.render(Samples.etapeReglageRefuse()) },
+        // Réglage du propriétaire d'une étape d'une recette Mealie, sans copie.
+        Shot("FicheMealieReglages", Route.FICHE) { s, root ->
+            s.fiche.render(Samples.ficheMealieReglages())
+            click(root, tr("Étapes"))
+        },
+        Shot("MonReglage", Route.REGLAGE),
+        Shot("MonReglageFeuille", Route.REGLAGE) { s, _ -> s.reglage.render(Samples.monReglageFeuille()) },
+        Shot("MonReglageRecette", Route.REGLAGE) { s, _ -> s.reglage.render(Samples.monReglageRecette()) },
+        Shot("MonReglageRefus", Route.REGLAGE) { s, _ -> s.reglage.render(Samples.monReglageRefus()) },
+        Shot("MonReglageChange", Route.REGLAGE) { s, _ -> s.reglage.render(Samples.monReglageChange()) },
+        Shot("MonReglageChargement", Route.REGLAGE) { s, _ -> s.reglage.render(MonReglageState(3, "Gâteau du verger", loading = true)) },
     )
 
     /** Fiche d'une recette Mealie (titre et contenu de la fiche d'essai), chez un robot qui écrit les recettes du téléphone. */
@@ -418,9 +430,10 @@ class ScreenshotTest {
     }
 
     private val WIDE_SHOTS = setOf("Repos", "Main", "Recettes", "Fiche", "FicheEtapes", "Envoyee", "Courses", "Robot", "Journal", "Appairage", "Editeur",
-        "RobotRenommerNom", "FicheMealie", "FicheMealieMaVersion")
+        "RobotRenommerNom", "FicheMealie", "FicheMealieMaVersion", "FicheMealieReglages", "MonReglage", "MonReglageFeuille")
     private val RENAME_MEALIE_SHOTS = setOf("Robot", "RobotNomLong", "RobotRenommer", "RobotRenommerNom", "RobotRenommerEnvoi",
-        "FicheMealie", "FicheMealieMaVersion", "RecettesMealie")
+        "FicheMealie", "FicheMealieMaVersion", "RecettesMealie", "FicheMealieReglages", "MonReglage", "MonReglageFeuille", "MonReglageRecette",
+        "MonReglageRefus", "MonReglageChange")
     private val UK_SHOTS = setOf("ProgrammeSmart", "Repos", "ReposSmart", "Main", "Etapes", "Pesee", "Pause", "Recettes", "Fiche", "Courses", "CoursesVide", "Robot", "RobotMiseAJour",
         "Journal", "Appairage", "AppairageCode", "Editeur", "Manuel", "Programme")
 
@@ -577,7 +590,7 @@ class ScreenshotTest {
     }
 
     /** Écrans dont une feuille ouverte défile (sa capture « -bas » montre le bas de la feuille). */
-    private val SHEET_SCROLL = setOf("EtapeReglageManuel", "EtapeReglageProgramme")
+    private val SHEET_SCROLL = setOf("EtapeReglageManuel", "EtapeReglageProgramme", "MonReglageFeuille")
 
     private fun findScrolls(v: View, out: MutableList<ScrollView> = ArrayList()): List<ScrollView> {
         if (v.visibility != View.VISIBLE) return out

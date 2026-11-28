@@ -125,6 +125,11 @@ class SimRobot {
     /** Robot de lot A : il écrit les recettes du téléphone, sans les réglages d'étape. */
     @Volatile var noSettings = false
 
+    /** Réglages d'étape du propriétaire envoyés par un téléphone (« id:rang:résumé » ou « id:rang:recette »), dans l'ordre. */
+    val ownWrites: MutableList<String> = java.util.Collections.synchronizedList(ArrayList())
+    /** Juste avant la décision d'une écriture (de quoi changer la recette entre la lecture du téléphone et l'écriture). */
+    @Volatile var beforeOwnWrite: () -> Unit = {}
+
     /** Robot d'avant la roue : il ne prend que les dix couleurs (pas de robot.anyAccent). */
     @Volatile var tenColoursOnly = false
 
@@ -156,6 +161,24 @@ class SimRobot {
             val w = decide(stored(id), editorOpen == id)
             w.saved?.let { written[it.id] = it }
             return w
+        }
+        // Comme RobotHost : la recette reçue, telle qu'affichée, et les réglages du propriétaire, écrits d'un bloc.
+        override val takesOwnSteps get() = !older
+        override fun ownSteps(id: String): app.toque.core.companion.OwnStepsRead? {
+            val r = stored(id) ?: return null
+            val a = corrections[id] ?: RecipeAdjustments()
+            return app.toque.core.companion.OwnStepsRead(r, recipe(id) ?: r, a.steps)
+        }
+        @Synchronized override fun writeOwnStep(id: String, decide: (read: app.toque.core.companion.OwnStepsRead?) -> app.toque.core.companion.OwnStepWrite):
+            app.toque.core.companion.OwnStepWrite {
+            beforeOwnWrite()
+            val w = decide(ownSteps(id))
+            if (w.error != null || !w.changed) return w.done(ownSteps(id))
+            val r = stored(id)!!
+            val a = corrections[id] ?: RecipeAdjustments()
+            corrections[id] = if (w.clear) a.withoutStep(r, w.index) else a.withStep(r, w.index, w.machine, app.toque.core.recipes.SettingAuthor.PHONE)
+            ownWrites += "$id:${w.index}:${if (w.clear) "recette" else w.machine?.summary}"
+            return w.done(ownSteps(id))
         }
         override val stopsRecipes get() = !older
         // Comme l'écran de la recette guidée : le programme lancé s'arrête, la session se clôt.

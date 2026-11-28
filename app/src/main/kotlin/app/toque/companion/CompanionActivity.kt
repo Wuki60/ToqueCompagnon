@@ -27,6 +27,7 @@ import app.toque.companion.flows.RobotFollow
 import app.toque.companion.flows.CatalogFlow
 import app.toque.companion.flows.DraftStore
 import app.toque.companion.flows.EditFlow
+import app.toque.companion.flows.OwnStepFlow
 import app.toque.companion.flows.JournalFlow
 import app.toque.companion.flows.PairingFlow
 import app.toque.companion.flows.PhoneClock
@@ -67,6 +68,8 @@ class CompanionActivity : Activity(), RobotLink.Listener {
         private set
     lateinit var editor: EditFlow
         private set
+    lateinit var ownSteps: OwnStepFlow
+        private set
     lateinit var appearance: AppearanceFlow
         private set
     lateinit var courses: CoursesFlow
@@ -106,6 +109,10 @@ class CompanionActivity : Activity(), RobotLink.Listener {
             DraftStore(java.io.File(noBackupFilesDir, "brouillons")), schedule, notice = { shell.notice(it) },
             onSaved = { id, leaving -> catalog.recipeSaved(id, leaving) })
         catalog.editor = editor
+        // « Mon réglage » d'une étape d'une recette Mealie : rien n'est gardé ici, le robot enregistre aussitôt.
+        ownSteps = OwnStepFlow(link, shell, { screens.reglage.render(it) }, notice = { shell.notice(it) },
+            onChanged = { id -> catalog.ownStepChanged(id) })
+        catalog.ownSteps = ownSteps
         // Liste de courses du téléphone (onglet Courses) ; les fiches y ajoutent leurs ingrédients.
         courses = CoursesFlow(load = { app.loadCart() }, save = { app.saveCart(it) }, render = { screens.courses.render(it) },
             share = { subject, text -> shareText(subject, text) }, notice = { shell.notice(it) })
@@ -124,7 +131,7 @@ class CompanionActivity : Activity(), RobotLink.Listener {
         robot.updates = app.updates
         app.updates.changed = { updateChanged() }
         app.updates.offer = { offerUpdate(it, 0) }
-        screens = Screens(this, live, shell, catalog, app.pictures, journal, robot, pairing, editor, courses)
+        screens = Screens(this, live, shell, catalog, app.pictures, journal, robot, pairing, editor, courses, ownSteps)
         shell.screens = screens
         live.screens = screens
         live.onOpenSentRecipe = { catalog.showWaiting() }
@@ -417,6 +424,7 @@ class CompanionActivity : Activity(), RobotLink.Listener {
         shell.close()
         catalog.close()
         editor.close()
+        ownSteps.close()
         journal.close()
         robot.close()
         appearance.close()

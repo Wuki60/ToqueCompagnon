@@ -832,5 +832,22 @@
   "Le nom que le robot donne à ce téléphone, dans sa liste et dans son journal.": "The name the robot gives this phone, in its list and in its log.",
   "Nom du téléphone": "Phone name",
   "Enregistrer": "Save",
-  "Laissez vide pour reprendre « %s ».": "Leave empty to go back to “%s”."
+  "Laissez vide pour reprendre « %s ».": "Leave empty to go back to “%s”.",
+  "Touchez une étape pour lui donner votre réglage du robot, sans copier la recette.": "Tap a step to give it your own robot setting, without copying the recipe.",
+  "Mon réglage, à vérifier sur le robot": "My setting, to check on the robot",
+  "Mon réglage": "My setting",
+  "Mon réglage pour l'étape %d": "My setting for step %d",
+  "Revenir au réglage de la recette": "Back to the recipe's setting",
+  "Votre réglage reste sur le robot, à côté de la recette : rien n'est copié. Si le texte de cette étape change dans Mealie, il ne s'applique plus.": "Your setting stays on the robot, next to the recipe: nothing is copied. If this step's text changes in Mealie, it no longer applies.",
+  "Lecture de l'étape sur le robot…": "Reading the step on the robot…",
+  "Étape indisponible": "Step unavailable",
+  "Envoi au robot…": "Sending to the robot…",
+  "Votre réglage, envoyé du téléphone : à vérifier une fois sur le robot avant son lancement": "Your setting, sent from the phone: to check once on the robot before it starts",
+  "Votre réglage, gardé sur le robot": "Your setting, kept on the robot",
+  "Réglage lu dans la recette : à vérifier sur le robot avant le premier lancement": "Setting read from the recipe: to check on the robot before the first start",
+  "Réglage de la recette": "Recipe's setting",
+  "Réglage de la recette : %s": "Recipe's setting: %s",
+  "La recette a changé sur le robot : relisez l'étape, puis choisissez de nouveau son réglage.": "The recipe has changed on the robot: read the step again, then choose its setting again.",
+  "Étape %d : réglage de la recette": "Step %d: recipe's setting",
+  "Réglage envoyé : à vérifier sur le robot": "Setting sent: to check on the robot"
 }

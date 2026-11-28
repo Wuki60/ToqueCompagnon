@@ -832,5 +832,22 @@
   "Le nom que le robot donne à ce téléphone, dans sa liste et dans son journal.": "El nombre que el robot da a este teléfono, en su lista y en su registro.",
   "Nom du téléphone": "Nombre del teléfono",
   "Enregistrer": "Guardar",
-  "Laissez vide pour reprendre « %s ».": "Déjelo vacío para volver a «%s»."
+  "Laissez vide pour reprendre « %s ».": "Déjelo vacío para volver a «%s».",
+  "Touchez une étape pour lui donner votre réglage du robot, sans copier la recette.": "Toque un paso para darle su propio ajuste del robot, sin copiar la receta.",
+  "Mon réglage, à vérifier sur le robot": "Mi ajuste, por comprobar en el robot",
+  "Mon réglage": "Mi ajuste",
+  "Mon réglage pour l'étape %d": "Mi ajuste para el paso %d",
+  "Revenir au réglage de la recette": "Volver al ajuste de la receta",
+  "Votre réglage reste sur le robot, à côté de la recette : rien n'est copié. Si le texte de cette étape change dans Mealie, il ne s'applique plus.": "Su ajuste se queda en el robot, junto a la receta: no se copia nada. Si el texto de este paso cambia en Mealie, deja de aplicarse.",
+  "Lecture de l'étape sur le robot…": "Leyendo el paso en el robot…",
+  "Étape indisponible": "Paso no disponible",
+  "Envoi au robot…": "Enviando al robot…",
+  "Votre réglage, envoyé du téléphone : à vérifier une fois sur le robot avant son lancement": "Su ajuste, enviado desde el teléfono: hay que comprobarlo una vez en el robot antes de iniciarlo",
+  "Votre réglage, gardé sur le robot": "Su ajuste, guardado en el robot",
+  "Réglage lu dans la recette : à vérifier sur le robot avant le premier lancement": "Ajuste leído en la receta: hay que comprobarlo en el robot antes del primer inicio",
+  "Réglage de la recette": "Ajuste de la receta",
+  "Réglage de la recette : %s": "Ajuste de la receta: %s",
+  "La recette a changé sur le robot : relisez l'étape, puis choisissez de nouveau son réglage.": "La receta ha cambiado en el robot: vuelva a leer el paso y elija de nuevo su ajuste.",
+  "Étape %d : réglage de la recette": "Paso %d: ajuste de la receta",
+  "Réglage envoyé : à vérifier sur le robot": "Ajuste enviado: por comprobar en el robot"
 }

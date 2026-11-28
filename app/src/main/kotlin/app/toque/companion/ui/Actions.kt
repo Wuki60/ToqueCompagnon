@@ -55,13 +55,50 @@ interface RecipeActions {
 
     /** « Ma version » confirmé sur la fiche d'une recette Lidl : le robot crée la copie, puis l'éditeur l'ouvre. */
     fun myVersion(id: String) {}
+
+    /**
+     * Étape [index] touchée sur la fiche d'une recette qui prend le réglage du propriétaire (Mealie, robot qui le
+     * dit) : l'écran « Mon réglage » de cette étape s'ouvre, sans copier la recette.
+     */
+    fun openOwnStep(id: String, index: Int) {}
+}
+
+/**
+ * Feuille « Réglage du robot » d'une étape (écrans Étape et Mon réglage) : l'ouvrir, choisir le genre
+ * ([program] : clé StepProgram, "" pour aucun), un cran sur [field] (seconds, tempC, speed, pulses), le sens et
+ * l'accessoire, reprendre le réglage enregistré, « Utiliser ce réglage », ou la fermer sans rien changer.
+ */
+interface SettingActions {
+    fun openSetting() {}
+    fun pickSetting(program: String) {}
+    fun stepSetting(field: String, dir: Int) {}
+    fun setSettingReverse(reverse: Boolean) {}
+    fun setSettingWhisk(whisk: Boolean) {}
+    fun restoreSetting() {}
+    fun applySetting() {}
+    fun closeSetting() {}
+}
+
+/**
+ * Le réglage du propriétaire d'une étape d'une recette reçue (écran Mon réglage) : la feuille l'envoie au robot,
+ * qui le juge et le fera vérifier sur place ; le texte de l'étape ne se change pas.
+ */
+interface OwnStepActions : SettingActions {
+    /** « Revenir au réglage de la recette » : le réglage du propriétaire s'en va. */
+    fun resetOwnStep() {}
+
+    /** « Réessayer » quand l'étape n'a pas pu être lue. */
+    fun retryOwnStep() {}
+
+    /** Retour à la fiche. */
+    fun closeOwnStep() {}
 }
 
 /**
  * Éditeur d'une recette perso (écrans Éditeur et Étape) : chaque changement est gardé aussitôt en
  * brouillon sur le téléphone ; le robot juge à l'enregistrement. Aucune méthode ne touche aux réglages machine.
  */
-interface EditActions {
+interface EditActions : SettingActions {
     /** « Reprendre le brouillon » / « Recommencer » quand un brouillon est proposé à l'ouverture. */
     fun resumeDraft() {}
     fun discardDraft() {}
@@ -87,19 +124,7 @@ interface EditActions {
     fun removeStep() {}
     fun closeStep() {}
 
-    /**
-     * Feuille « Réglage du robot » de l'étape ouverte (robot qui prend les réglages) : l'ouvrir, choisir le
-     * genre ([program] : clé StepProgram, "" pour aucun), un cran sur [field] (seconds, tempC, speed, pulses),
-     * le sens et l'accessoire, reprendre le réglage enregistré, « Utiliser ce réglage », ou la fermer sans rien changer.
-     */
-    fun openSetting() {}
-    fun pickSetting(program: String) {}
-    fun stepSetting(field: String, dir: Int) {}
-    fun setSettingReverse(reverse: Boolean) {}
-    fun setSettingWhisk(whisk: Boolean) {}
-    fun restoreSetting() {}
-    fun applySetting() {}
-    fun closeSetting() {}
+    // Feuille « Réglage du robot » de l'étape ouverte (robot qui prend les réglages) : voir SettingActions.
 
     /** « Enregistrer sur le robot ». */
     fun save() {}

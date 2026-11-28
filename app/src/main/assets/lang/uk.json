@@ -832,5 +832,22 @@
   "Le nom que le robot donne à ce téléphone, dans sa liste et dans son journal.": "Назва, яку робот дає цьому телефону, у своєму списку та журналі.",
   "Nom du téléphone": "Назва телефона",
   "Enregistrer": "Зберегти",
-  "Laissez vide pour reprendre « %s ».": "Залиште порожнім, щоб повернути «%s»."
+  "Laissez vide pour reprendre « %s ».": "Залиште порожнім, щоб повернути «%s».",
+  "Touchez une étape pour lui donner votre réglage du robot, sans copier la recette.": "Торкніться кроку, щоб задати йому своє налаштування робота, не копіюючи рецепт.",
+  "Mon réglage, à vérifier sur le robot": "Моє налаштування, перевірте на роботі",
+  "Mon réglage": "Моє налаштування",
+  "Mon réglage pour l'étape %d": "Моє налаштування для кроку %d",
+  "Revenir au réglage de la recette": "Повернути налаштування рецепта",
+  "Votre réglage reste sur le robot, à côté de la recette : rien n'est copié. Si le texte de cette étape change dans Mealie, il ne s'applique plus.": "Ваше налаштування залишається на роботі, поруч із рецептом: нічого не копіюється. Якщо текст цього кроку зміниться в Mealie, воно більше не застосовується.",
+  "Lecture de l'étape sur le robot…": "Читання кроку на роботі…",
+  "Étape indisponible": "Крок недоступний",
+  "Envoi au robot…": "Надсилання на робот…",
+  "Votre réglage, envoyé du téléphone : à vérifier une fois sur le robot avant son lancement": "Ваше налаштування, надіслане з телефона: перевірте його один раз на роботі перед запуском",
+  "Votre réglage, gardé sur le robot": "Ваше налаштування, збережене на роботі",
+  "Réglage lu dans la recette : à vérifier sur le robot avant le premier lancement": "Налаштування з рецепта: перевірте на роботі перед першим запуском",
+  "Réglage de la recette": "Налаштування рецепта",
+  "Réglage de la recette : %s": "Налаштування рецепта: %s",
+  "La recette a changé sur le robot : relisez l'étape, puis choisissez de nouveau son réglage.": "Рецепт змінився на роботі: перечитайте крок і знову виберіть його налаштування.",
+  "Étape %d : réglage de la recette": "Крок %d: налаштування рецепта",
+  "Réglage envoyé : à vérifier sur le robot": "Налаштування надіслано: перевірте на роботі"
 }

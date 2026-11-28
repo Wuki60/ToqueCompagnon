@@ -92,13 +92,25 @@ data class FicheState(
     val mealie: Boolean = false,
     /** Recette de la communauté toqueapp.org (même source) : « Ma version » le dit. */
     val community: Boolean = false,
+    /**
+     * La recette prend le réglage du propriétaire par étape, sans copie (RecipeDetail.ownSettings : Mealie, chez un
+     * robot qui le dit) : les étapes portent leurs marques ([FicheStep.own], [FicheStep.review]).
+     */
+    val ownSettings: Boolean = false,
+    /** Le robot prend ce réglage depuis le téléphone maintenant (state.can.ownSettings) : une étape touchée l'ouvre. */
+    val canOwn: Boolean = false,
 ) {
+    /** Une étape touchée ouvre « Mon réglage » (recette qui le prend, robot qui le permet, fiche chargée). */
+    val stepsTappable: Boolean get() = ownSettings && canOwn && !loading && error == null
     /** Comme sur le robot : quitter le nombre de la recette se confirme d'abord ; y revenir ou changer encore, non. */
     fun servingsNeedConfirm(to: Int): Boolean = baseServings != null && servings == baseServings && to != baseServings
 }
 
-/** Une étape de la fiche : texte et réglages (« 3 min · 100 °C · vitesse 1 », « Pesée », « À la main »). */
-data class FicheStep(val text: String, val detail: String = "")
+/**
+ * Une étape de la fiche : texte et réglages (« 3 min · 100 °C · vitesse 1 », « Pesée », « À la main ») ; sur une
+ * recette qui prend le réglage du propriétaire, [own] (« robot », « phone », vide) et [review] (à vérifier sur le robot).
+ */
+data class FicheStep(val text: String, val detail: String = "", val own: String = "", val review: Boolean = false)
 
 /** « Ma recette · 6 étapes », « Depuis Mealie · 6 étapes » ou « Soupes · 6 étapes ». */
 internal fun recipeSubtitle(personal: Boolean, category: String, stepCount: Int, mealie: Boolean = false): String =
@@ -137,6 +149,8 @@ class FicheScreen(c: Context, private val actions: RecipeActions, private val pi
     private val ingredients = IngredientCard(c)
     private val steps = Ui.card(c)
     private val stepRows = ArrayList<StepRow>()
+    /** « Touchez une étape… », en tête des étapes d'une recette qui prend le réglage du propriétaire. */
+    private val stepsHint = Ui.text(c, tr("Touchez une étape pour lui donner votre réglage du robot, sans copier la recette."), 14f, Ui.TEXT2, lineHeight = 19f)
     private val status = EmptyState(c, Icon.Kind.WARNING, tr("Réessayer")) { actions.retry() }
     private val note = Ui.text(c, "", 13f, Ui.TEXT2, lineHeight = 18f)
     private val noteIcon = Icon(c, Icon.Kind.SCREEN, Ui.TEXT2)
@@ -216,6 +230,7 @@ class FicheScreen(c: Context, private val actions: RecipeActions, private val pi
         listRow = listButtons
         column.addView(listButtons, Ui.lp(l = 20, t = 8, r = 20))
         Ui.pad(steps, 16, 14, 16, 14)
+        steps.addView(stepsHint, Ui.lp(b = 12))
         column.addView(steps, Ui.lp(l = 20, t = 12, r = 20))
         column.addView(status, Ui.lp(l = 20, t = 12, r = 20))
         column.addView(Ui.spacer(c, h = 12))
@@ -361,9 +376,14 @@ class FicheScreen(c: Context, private val actions: RecipeActions, private val pi
 
         // Lignes réutilisées : un appui sur − / + ne change que des textes.
         ingredients.set(s.ingredients)
-        while (stepRows.size < s.steps.size) stepRows += StepRow(c).also { steps.addView(it.root, Ui.lp(t = if (stepRows.isEmpty()) 0 else 14)) }
+        while (stepRows.size < s.steps.size) {
+            val i = stepRows.size
+            stepRows += StepRow(c) { state?.let { st -> if (st.stepsTappable) actions.openOwnStep(st.id, i) } }
+                .also { steps.addView(it.root, Ui.lp(t = if (stepRows.isEmpty()) 0 else 14)) }
+        }
         while (stepRows.size > s.steps.size) steps.removeView(stepRows.removeAt(stepRows.size - 1).root)
-        s.steps.forEachIndexed { i, step -> stepRows[i].bind(step, i + 1) }
+        Ui.show(stepsHint, s.stepsTappable)
+        s.steps.forEachIndexed { i, step -> stepRows[i].bind(step, i + 1, s.ownSettings, s.stepsTappable) }
         // Quantités d'un autre nombre, en attendant celles du robot.
         val alpha = if (s.quantitiesPending) PENDING_ALPHA else 1f
         if (ingredients.alpha != alpha) ingredients.alpha = alpha
@@ -436,26 +456,56 @@ class FicheScreen(c: Context, private val actions: RecipeActions, private val pi
         const val PENDING_ALPHA = 0.4f
     }
 
-    /** Une étape : numéro dans un cercle, texte, réglages en gris. */
-    private class StepRow(c: Context) {
+    /**
+     * Une étape : numéro dans un cercle, texte, réglages en gris ; sur une recette qui prend le réglage du
+     * propriétaire, sa marque (« Mon réglage », à vérifier sur le robot) et, si le robot le permet, un appui
+     * qui ouvre « Mon réglage » ([onTap]).
+     */
+    private class StepRow(val c: Context, onTap: () -> Unit) {
         val root = Ui.horizontal(c, Gravity.TOP)
         private val marker = StepMarker(c)
         private val text: TextView = Ui.text(c, "", 15f, Ui.TEXT, lineHeight = 21f)
         private val detail: TextView = Ui.text(c, "", 13f, Ui.TEXT2, lineHeight = 18f)
+        private val mark: TextView = Ui.text(c, "", 13f, Ui.ACCENT_INK, Ui.MEDIUM, lineHeight = 18f)
+        private val chevron = Icon(c, Icon.Kind.CHEVRON, Ui.TEXT2)
+        private var tappable: Boolean? = null
 
         init {
             root.addView(marker, LinearLayout.LayoutParams(Ui.dp(22), Ui.dp(22)).apply { rightMargin = Ui.dp(12) })
             val col = Ui.vertical(c)
             col.addView(text)
             col.addView(detail, Ui.lp(t = 2))
+            col.addView(mark, Ui.lp(t = 2))
             root.addView(col, Ui.lp(0, Ui.WRAP, 1f))
+            root.addView(chevron, LinearLayout.LayoutParams(Ui.dp(18), Ui.dp(18)).apply { leftMargin = Ui.dp(8); topMargin = Ui.dp(2) })
+            root.setOnClickListener { onTap() }
         }
 
-        fun bind(s: FicheStep, number: Int) {
+        fun bind(s: FicheStep, number: Int, own: Boolean, tap: Boolean) {
             marker.set(StepStatus.TODO, number)
             Ui.set(text, s.text)
             Ui.set(detail, s.detail)
             Ui.show(detail, s.detail.isNotEmpty())
+            // Les marques de la page de la recette du robot : le réglage du propriétaire, et ce qui reste à vérifier là-bas.
+            val m = when {
+                !own -> ""
+                s.own == MonReglageScreen.OWN_PHONE && s.review -> tr("Mon réglage, à vérifier sur le robot")
+                s.own.isNotEmpty() -> tr("Mon réglage")
+                s.review -> tr("À vérifier sur le robot avant le premier lancement")
+                else -> ""
+            }
+            Ui.set(mark, m)
+            Ui.show(mark, m.isNotEmpty())
+            Ui.setColor(mark, if (s.own.isNotEmpty()) Ui.ACCENT_INK else Ui.TEXT2)
+            Ui.show(chevron, tap)
+            if (tappable != tap) {
+                tappable = tap
+                root.background = if (tap) Ui.pressable(Ui.round(0, 12f), 12f) else null
+                root.isClickable = tap
+                root.isFocusable = tap
+                root.minimumHeight = if (tap) Ui.dp(Ui.TOUCH) else 0
+            }
+            root.contentDescription = if (tap) tr("Mon réglage pour l'étape %d", number) + " : " + s.text else null
         }
     }
 }
