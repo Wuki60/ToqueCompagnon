@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import app.toque.companion.flows.DraftStore
 import app.toque.companion.flows.EditFlow
+import app.toque.companion.flows.OwnStepFlow
 import app.toque.companion.flows.Scheduler
 import app.toque.companion.link.MemoryLinkStore
 import app.toque.companion.link.RobotLink
@@ -32,7 +33,7 @@ import org.robolectric.annotation.Config
 
 /**
  * La flèche de retour et le retour du système sur les écrans que leur déroulement referme lui-même : l'Étape
- * de l'éditeur et l'éditeur. L'écran demande au déroulement de se fermer, et le déroulement le dit à la
+ * de l'éditeur, l'éditeur, et « Mon réglage » d'une recette Mealie. L'écran demande au déroulement de se fermer, et le déroulement le dit à la
  * coquille. Avec la vraie coquille et le vrai déroulement, pas la navigation sans vues des autres essais : la
  * coquille demande d'abord à l'écran affiché s'il traite le retour, et ils ne doivent pas s'appeler sans fin.
  */
@@ -44,6 +45,7 @@ class BackArrowTest {
     private lateinit var screens: Screens
     private lateinit var link: RobotLink
     private lateinit var editor: EditFlow
+    private lateinit var own: OwnStepFlow
 
     @Before fun setUp() {
         val c = ContextThemeWrapper(RuntimeEnvironment.getApplication(), R.style.Companion)
@@ -55,7 +57,8 @@ class BackArrowTest {
         link = RobotLink(MemoryLinkStore(), post = { main.post(it) }, ownIpv4 = { null }, candidates = { emptyList() })
         shell = Shell(c)
         editor = EditFlow(link, shell, { screens.editeur.render(it) }, { screens.etape.render(it) }, DraftStore(tmp.newFolder("brouillons")), schedule)
-        screens = Screens(c, object : LiveActions {}, shell, edit = editor)
+        own = OwnStepFlow(link, shell, { screens.reglage.render(it) })
+        screens = Screens(c, object : LiveActions {}, shell, edit = editor, ownStep = own)
         shell.screens = screens
         Samples.renderAll(screens)
         shell.refresh()
@@ -63,6 +66,7 @@ class BackArrowTest {
 
     @After fun tearDown() {
         editor.close()
+        own.close()
         link.close()
     }
 
@@ -106,6 +110,27 @@ class BackArrowTest {
         editor.addStep()
         idle()
         assertEquals(Route.ETAPE, shell.current)
+    }
+
+    /** « Mon réglage » d'une étape, ouvert depuis la fiche d'une recette Mealie (le robot ne répond pas : peu importe ici). */
+    private fun openMyStepSetting() {
+        shell.open(Route.FICHE)
+        own.open("mealie-5e6f7a8b", 1, "empreinte", "Tarte d'essai")
+        idle()
+        assertEquals(Route.REGLAGE, shell.current)
+    }
+
+    @Test fun theBackArrowOfMyStepSettingReturnsToTheRecipe() {
+        openMyStepSetting()
+        backArrow(screens.reglage.view, "Retour à la recette")
+        assertEquals(Route.FICHE, shell.current)
+    }
+
+    @Test fun theSystemBackOnMyStepSettingReturnsToTheRecipe() {
+        openMyStepSetting()
+        assertTrue(shell.back())
+        idle()
+        assertEquals(Route.FICHE, shell.current)
     }
 
     @Test fun theBackArrowOfAStepReturnsToTheEditor() {

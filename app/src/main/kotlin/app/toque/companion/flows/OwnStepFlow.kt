@@ -225,7 +225,7 @@ class OwnStepFlow(
 
     override fun closeOwnStep() {
         choice = null
-        if (nav.current == Route.REGLAGE) nav.back()
+        nav.close(Route.REGLAGE)
     }
 
     private fun message(t: Throwable): String {
