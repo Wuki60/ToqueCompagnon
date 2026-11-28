@@ -14,6 +14,11 @@ import app.toque.companion.ui.screens.PeseeState
 import app.toque.companion.ui.screens.ReposState
 import app.toque.companion.ui.screens.RepriseState
 import app.toque.core.companion.AdjustRequest
+import app.toque.core.companion.CompanionApi
+import app.toque.core.companion.HttpHandler
+import app.toque.core.companion.HttpRequest
+import app.toque.core.companion.HttpResponse
+import app.toque.core.companion.HttpServer
 import app.toque.core.companion.CookSession
 import app.toque.core.companion.WaitingFor
 import app.toque.core.machine.Programs
@@ -44,9 +49,11 @@ class RobotLinkEndToEndTest {
     private val main = Executors.newSingleThreadScheduledExecutor { r -> Thread(r, "test-main").apply { isDaemon = true } }
     private val robots = ArrayList<SimRobot>()
     private val links = ArrayList<RobotLink>()
+    private val servers = ArrayList<HttpServer>()
 
     @After fun tearDown() {
         links.forEach { it.close() }
+        servers.forEach { it.stop() }
         robots.forEach { it.shutdown() }
         main.shutdownNow()
     }
@@ -280,11 +287,18 @@ class RobotLinkEndToEndTest {
         pair(robot, link)
         link.follow("test")
         eventually("suivi") { link.status.phase == LinkPhase.CONNECTED }
-        // Le robot disparaît du réseau, retire le téléphone, revient : le téléphone refait la preuve, qui échoue.
+        // Le robot disparaît du réseau et retire le téléphone ; à son adresse répond un appareil qui ne reconnaît pas
+        // ce téléphone : la preuve y échoue, le reste n'y répond pas (404, pas 401). Le robot lui-même revenu, le
+        // suivi recevrait un 401 et oublierait l'appairage (phoneRemovedOnTheRobot) : selon qui passait le
+        // premier, ce test échouait une fois sur trois.
         val port = robot.port
         robot.hub.stop()
         robot.hub.pairing.remove(link.paired!!.phoneId)
-        robot.hub.start(port, InetAddress.getByName("127.0.0.1"))
+        val api = CompanionApi(robot.hub)
+        servers += HttpServer(object : HttpHandler {
+            override fun handle(request: HttpRequest): HttpResponse =
+                if (request.path == "/api/prove") api.handle(request) else HttpResponse.text(404, "Not found\n")
+        }, port, InetAddress.getByName("127.0.0.1")).also { it.start() }
         eventually("peut-être retiré", 30_000) { link.status.phase == LinkPhase.UNREACHABLE && link.status.maybeRemoved }
         // Le jeton n'est jamais parti : l'appairage reste, l'écran le dit.
         assertTrue(link.paired != null)
