@@ -33,6 +33,7 @@ enum class ProgramKind(val icon: Icon.Kind, val fr: String, val smart: Boolean =
     KNEAD(Icon.Kind.KNEAD, trKey("Pétrir")),
     STEAM(Icon.Kind.STEAM, trKey("Vapeur")),
     TOAST(Icon.Kind.FLAME, trKey("Rissoler")),
+    YOGURT(Icon.Kind.TIMER, trKey("Yaourt")),
     CLEAN(Icon.Kind.DROP, trKey("Nettoyage")),
     MIXER(Icon.Kind.SPEED, trKey("Mixer"), true),
     SMOOTHIE(Icon.Kind.DROP, trKey("Smoothie"), true),

@@ -61,6 +61,9 @@ object LiveShots {
             machine = ready.copy(tempC = 24))) },
         "Fil-Programme" to { input(state(job = job(kind = "STEAM", label = "Vapeur", kindLabel = "Vapeur", remainingMs = 845_000,
             totalMs = 1_200_000, speed = 0, tempC = 120), machine = ready.copy(tempC = 100))) },
+        // Yaourt : une cuisson MANUAL pour la base, montrée comme un programme (8 h, 37 °C, lame à l'arrêt).
+        "Fil-Yaourt" to { input(state(job = job(remainingMs = 7 * 3600_000L + 12 * 60_000L, totalMs = 8 * 3600_000L, speed = 0, tempC = 37,
+            label = "Yaourt").copy(ferment = true), machine = ready.copy(tempC = 36))) },
         "Fil-Repos" to { input(state(machine = ready.copy(tempC = 64), last = ActivityWire(3, "recipe", "Velouté de potimarron",
             startedAt = T - 3_600_000, endedAt = T - 1_440_000, outcome = "finished"))) },
         "Fil-ReposLancementRefuse" to { input(state(machine = ready.copy(tempC = 24, lidOpen = true),

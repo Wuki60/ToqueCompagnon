@@ -103,7 +103,7 @@ class RobotFlow(
             forgetting = forgetting,
             phoneName = me?.name.orEmpty(),
             phoneLabel = me?.label.orEmpty(),
-            phoneDefault = me?.number?.takeIf { it > 0 }?.let { tr("Téléphone %d", it) }.orEmpty(),
+            phoneDefault = phoneDefaultName(me),
             canRename = s?.can?.renamePhone?.allowed == true && me != null,
             renaming = renaming,
             manualStartOff = manualStartOff(s),
@@ -225,4 +225,17 @@ interface LanguageChoice {
     fun setting(): String
     fun options(): List<Pair<String, String>>
     fun choose(code: String)
+}
+
+/**
+ * Le nom que ce téléphone reprendrait sans nom donné, tel que le robot l'écrit, dans sa langue : le robot le
+ * dit ([PhoneWire.defaultName]), et sans nom donné c'est son nom tout court. Un robot plus ancien ne le dit
+ * pas pour un téléphone déjà nommé : « Téléphone N », dans la langue d'ici.
+ */
+internal fun phoneDefaultName(me: PhoneWire?): String = when {
+    me == null -> ""
+    me.defaultName.isNotEmpty() -> me.defaultName
+    me.label.isEmpty() && me.name.isNotEmpty() -> me.name
+    me.number > 0 -> tr("Téléphone %d", me.number)
+    else -> ""
 }

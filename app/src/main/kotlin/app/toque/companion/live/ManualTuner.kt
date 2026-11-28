@@ -58,7 +58,8 @@ class ManualTuner(
 
     private fun adjustable(s: StateWire?): JobWire? {
         val j = s?.job ?: return null
-        if (j.kind != "MANUAL" || j.phaseCount > 1 || j.state !in setOf("STARTING", "RUNNING", "PAUSED")) return null
+        // Une cuisson manuelle seulement : un yaourt est aussi MANUAL pour la base, mais il ne se règle pas d'ici.
+        if (!LivePresenter.isManual(j) || j.state !in setOf("STARTING", "RUNNING", "PAUSED")) return null
         return j
     }
 
